@@ -48,6 +48,12 @@ It has three directories:
 
 ## Server Deployment
 
+```shell
+# Make sure to fetch latest
+go get github.com/opendroid/gcp_go_funcs/grpc_tests/notes
+go get google.golang.org/grpc
+```
+
 ### First time deployment
 ```shell
 # Be in server directory
