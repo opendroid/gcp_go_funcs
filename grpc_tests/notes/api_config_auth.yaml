@@ -1,0 +1,32 @@
+# The configuration schema is defined by service.proto file
+# https://github.com/googleapis/googleapis/blob/master/google/api/service.proto
+type: google.api.Service
+config_version: 3
+
+# Name of the service configuration.
+name: notes.endpoints.gcp-experiments-334602.cloud.goog
+
+# API title to appear in the user interface (Google Cloud Console).
+title: Hello gRPC API
+apis:
+  - name: notes.CreateNote
+  - name: notes.GetNote
+  - name: notes.GetNotesByAuthor
+
+# Instructions: https://cloud.google.com/endpoints/docs/openapi/service-account-authentication
+authentication:
+  providers:
+    - id: google_service_account
+      audiences: notes.endpoints.gcp-experiments-334602.cloud.goog
+      issuer: grpc-notes-test-access@gcp-experiments-334602.iam.gserviceaccount.com
+      jwks_uri: https://www.googleapis.com/robot/v1/metadata/x509/grpc-notes-test-access@gcp-experiments-334602.iam.gserviceaccount.com
+  rules:
+    # This auth rule will apply to all methods.
+    - selector: "*"
+      requirements:
+        - provider_id: google_service_account
+
+usage:
+  rules:
+    - selector: "*"
+      allow_unregistered_calls: true

@@ -1,0 +1,11 @@
+# Build the module.
+steps:
+  - id: lint
+    name: "gcr.io/cloud-builders/go"
+    args: ["vet","./..."]
+    env: ["PROJECT_ROOT=grpc_test_server"]
+  - id: build
+    name: "gcr.io/cloud-builders/docker"
+    args: ['build', '--tag=gcr.io/gcp-experiments-334602/grpc_test_server', '.']
+    env: ["PROJECT_ROOT=grpc_test_server"]
+images: ['gcr.io/gcp-experiments-334602/grpc_test_server']

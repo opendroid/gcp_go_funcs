@@ -1,0 +1,14 @@
+# The configuration schema is defined by notes.proto file
+# https://github.com/googleapis/googleapis/blob/master/google/api/service.proto
+type: google.api.Service
+config_version: 3
+
+# Name of the 'notes' configuration.
+name: notes.endpoints.gcp-experiments-334602.cloud.goog
+
+# API title to appear in the user interface (Google Cloud Console).
+title: Notes gRPC Test API
+apis:
+  - name: notes.CreateNote
+  - name: notes.GetNote
+  - name: notes.GetNotesByAuthor

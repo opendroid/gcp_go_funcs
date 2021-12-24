@@ -1,0 +1,44 @@
+# Deploy config file with  GKE
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-notes
+spec:
+  ports:
+    - port: 80
+      targetPort: 9000
+      protocol: TCP
+      name: http
+  selector:
+    app: grpc-notes
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-notes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-notes
+  template:
+    metadata:
+      labels:
+        app: grpc-notes
+    spec:
+      containers:
+        - name: esp
+          image: gcr.io/endpoints-release/endpoints-runtime:1
+          args: [
+              "-P", "9000",
+              "-a", "grpc://127.0.0.1:50051",
+              "-s", "notes.endpoints.gcp-experiments-334602.cloud.goog",
+              "--rollout_strategy", "managed",
+          ]
+          ports:
+            - containerPort: 9000
+        - name: echo
+          image: gcr.io/gcp-experiments-334602/grpc_test_server:1.0
+          ports:
+            - containerPort: 50051

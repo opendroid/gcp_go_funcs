@@ -1,0 +1,58 @@
+syntax = "proto3";
+package notes;
+
+import "google/protobuf/timestamp.proto";
+option go_package = "github.com/opendroid/gcp_go_funcs/grpc_tests/notes";
+
+// Location is latitude and longitude and time of location
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+  google.protobuf.Timestamp at = 3;
+}
+
+// Note data for a Request or response
+message Note {
+  string id = 1;  // Unique UUID number for this Note.
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp last_updated = 3;
+  string author = 4; // UUID of the user that created this note
+  repeated Location location = 5;
+  string  text = 6; // Content of the text
+}
+
+message CreateNoteRequest {
+  string author = 1; // Creator name
+  Note note = 2;
+}
+
+message CreateNoteResponse {
+  optional string err_message = 1;
+}
+
+message GetNoteRequest {
+  string id = 1; // UUID of the note
+  string author = 2; // UUID of author
+}
+
+message GetNoteResponse {
+  Note note = 1;
+}
+
+message GetNotesByAuthorRequest {
+  string author = 1; // UUID of author
+}
+
+// NotesByAuthorResponse defines notes value returned
+message GetNotesByAuthorResponse {
+  repeated Note notes = 1; // UUID of author
+}
+
+/*
+ * NotesService defines the gRPC endpoints to be used
+ */
+service NotesService {
+  rpc CreateNote(CreateNoteRequest) returns(CreateNoteResponse);
+  rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
+  rpc GetNotesByAuthor(GetNotesByAuthorRequest) returns (GetNotesByAuthorResponse);
+}
