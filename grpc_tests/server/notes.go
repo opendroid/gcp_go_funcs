@@ -81,7 +81,7 @@ func (s *notesServer) CreateNote(_ context.Context, request *pb.CreateNoteReques
 }
 
 // GetNote that is a specific UUID and by Author
-func (s *notesServer) GetNote(_ context.Context, request *pb.GetNoteRequest) (*pb.GetNoteResponse, error) {
+func (s *notesServer) GetNote(_ context.Context, _ *pb.GetNoteRequest) (*pb.GetNoteResponse, error) {
 	fmt.Printf(`{"method": "GetNote"}`)
 	return nil, nil
 }
