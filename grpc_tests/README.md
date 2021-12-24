@@ -50,7 +50,7 @@ It has three directories:
 
 ```shell
 # Make sure to fetch latest
-go get github.com/opendroid/gcp_go_funcs/grpc_tests/notes
+go get -u github.com/opendroid/gcp_go_funcs/grpc_tests/notes
 go get google.golang.org/grpc
 ```
 

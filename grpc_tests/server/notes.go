@@ -39,7 +39,7 @@ func init() {
 
 // CreateNote add a note to the local map
 func (s *notesServer) CreateNote(_ context.Context, request *pb.CreateNoteRequest) (*pb.CreateNoteResponse, error) {
-	locations := request.GetNote().GetLocations()
+	locations := request.Note.GetLocations()
 	if len(locations) > 0 {
 		for _, loc := range locations {
 			lat := loc.Latitude
