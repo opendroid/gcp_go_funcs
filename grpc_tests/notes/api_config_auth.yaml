@@ -1,5 +1,5 @@
 # The configuration schema is defined by service.proto file
-# https://github.com/googleapis/googleapis/blob/master/google/api/service.proto
+# https://github.com/opendroid/gcp_go_funcs/blob/main/grpc_tests/notes/notes.proto
 type: google.api.Service
 config_version: 3
 

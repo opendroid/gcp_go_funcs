@@ -37,7 +37,7 @@ func BadAckFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = r.Body.Close()
 	if data := string(msg.Message.Data); data != "" {
-		if msg.Message.DeliveryAttempt != nil {
+		if msg.Message.DeliveryAttempt != nil { // Note that this is not set yet.
 			data += fmt.Sprintf(`, "attempt": %d`, *msg.Message.DeliveryAttempt)
 		}
 		fmt.Printf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s", "data": %s}`, msg.Subscription, data)
