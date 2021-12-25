@@ -5,6 +5,7 @@ import (
 	"fmt"
 	notespb "github.com/opendroid/gcp_go_funcs/grpc_tests/notes"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"sync"
 	"time"
 )
 
@@ -32,16 +33,12 @@ type Note struct {
 
 var (
 	// notes is poor mans demo-data store.
-	notes map[string][]Note
+	notes sync.Map // Stores [string][]Note
 )
 
 const (
 	InvalidID = "00000000-0000-0000-0000-000000000000"
 )
-
-func init() {
-	notes = make(map[string][]Note)
-}
 
 // CreateNote add a note to the local map
 func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteRequest) (*notespb.CreateNoteResponse, error) {
@@ -76,12 +73,14 @@ func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteR
 		note.Locations[i].Latitude = loc.GetLatitude()
 		note.Locations[i].Longitude = loc.GetLongitude()
 	}
-
-	if n, ok := notes[author]; !ok {
-		n = make([]Note, 0)
-		notes[author] = append(n, note)
+	// Save data in the syncMap
+	if n, ok := notes.Load(author); !ok {
+		notes.Store(author, []Note{note})
 	} else {
-		notes[author] = append(n, note)
+		if nd, valid := n.([]Note); valid {
+			nu := append(nd, note)
+			notes.Store(author, nu)
+		}
 	}
 	msg := "OK"
 	response := &notespb.CreateNoteResponse{ErrMessage: &msg}
@@ -112,26 +111,28 @@ func (s *notesServer) GetNotesByAuthor(_ context.Context, request *notespb.GetNo
 	}
 	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNotesByAuthor", "author": "%s"}`, author)
 	fmt.Println(m)
-	// Copy all notes data. No sync operation
-	if n, ok := notes[author]; ok && len(n) > 0 {
-		nptrs := make([]*notespb.Note, len(n))
-		for i, ni := range n { // ni is ith-note by Author
-			nptrs[i] = new(notespb.Note) // Create a new note
-			nptrs[i].Id = ni.Id
-			nptrs[i].Author = ni.Author
-			nptrs[i].Text = ni.Text
-			nptrs[i].CreatedAt = timestamppb.New(ni.CreatedAt)
-			nptrs[i].LastUpdated = timestamppb.New(ni.LastUpdated)
-			nptrs[i].Locations = make([]*notespb.Location, len(ni.Locations)) // create space for locations
-			for j, loc := range ni.Locations {                                // Add each location
-				nptrs[i].Locations[j] = &notespb.Location{
-					Latitude:  loc.Latitude,
-					Longitude: loc.Longitude,
-					At:        timestamppb.New(loc.At),
-				} // Add each location
+	// Copy all notes data.
+	if n, ok := notes.Load(author); ok {
+		if nd, valid := n.([]Note); valid && len(nd) > 0 { // nd, Notes data
+			nptrs := make([]*notespb.Note, len(nd))
+			for i, ni := range nd { // ni is ith-note by Author
+				nptrs[i] = new(notespb.Note) // Create a new note
+				nptrs[i].Id = ni.Id
+				nptrs[i].Author = ni.Author
+				nptrs[i].Text = ni.Text
+				nptrs[i].CreatedAt = timestamppb.New(ni.CreatedAt)
+				nptrs[i].LastUpdated = timestamppb.New(ni.LastUpdated)
+				nptrs[i].Locations = make([]*notespb.Location, len(ni.Locations)) // create space for locations
+				for j, loc := range ni.Locations {                                // Add each location
+					nptrs[i].Locations[j] = &notespb.Location{
+						Latitude:  loc.Latitude,
+						Longitude: loc.Longitude,
+						At:        timestamppb.New(loc.At),
+					} // Add each location
+				}
 			}
+			return &notespb.GetNotesByAuthorResponse{Notes: nptrs}, nil
 		}
-		return &notespb.GetNotesByAuthorResponse{Notes: nptrs}, nil
 	}
 	return nil, fmt.Errorf("GetNotesByAuthor: no notes by author %s", author)
 }

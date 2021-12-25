@@ -87,6 +87,14 @@ go mod tidy
 ```
 Once we can successfully build, deploy to __Local docker__ or __Cloud Run__ environments.
 
+Note that if you are making changes to `notes` definition, during development you may set the:
+```shell
+# Temporarily use local notes directory.
+go mod edit -replace github.com/opendroid/gcp_go_funcs/grpc_tests/notes=../notes
+```
+However, the relative backward path won't work for crating Docker image as it works in current directory.
+To do that you will need to [clone git-repo into Docker](https://janakerman.co.uk/docker-git-clone/).
+
 #### Deploying to Local docker
 Before we deploy to GCP Cloud Run, test the server and client code locally. Once, it works on a local docker
 proceed with Cloud Run deploy. Build local `server` docker using these commands:
@@ -98,7 +106,7 @@ docker build -t notes:v1 . # Build docker image as v1
 Once deployed, test the client and server. The server will expose gRPC on port __localhost:8080__.
 ```shell
 # Run Notes gRPC server, on local docker, expose :8080
-docker run -d -p 8080:8080 notes:v1 ./grpc_test_server
+docker run --rm -p 8080:8080 notes:v1 ./grpc_test_server
 # Run client, (in 'client' dir), set NOTES_GRPC_ADDRESS server address to local
 NOTES_GRPC_ADDRESS="localhost:8080" go run main.go
 ```
