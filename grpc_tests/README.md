@@ -107,8 +107,8 @@ NOTES_GRPC_ADDRESS="localhost:8080" go run main.go
 
 | :exclamation: | For streaming gRPC, enable http2 |
 |:----------:|:---------------------------------|
-To deploy the server in __Cloud Run__ be 
-in `server` directory. First make sure that the auth and GCP projects are set up appropriately:
+
+To deploy the server in __Cloud Run__ be in `server` directory. First make sure that the auth and GCP projects are set up appropriately:
 ```shell
 gcloud config set account ajaythakur1972@gmail.com # Make sure you have right login
 gcloud config configurations activate gcp-experiments # Activate right project
