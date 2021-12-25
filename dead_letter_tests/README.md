@@ -1,8 +1,10 @@
-# Dead Letter Tests
-These 
+# Dead Letter Topic
+These functions test the Pub/Sub retries and dead-letter topics.
+
 ## Dead Letter Topic
-These pair of cloud functions `AckPubMessage` and `BadAckFunc` test the subscription retries and dead-letter topics.
-Main Pub/Sub topic: __radio-pluto__, has  cloud http trigger func `BadAckFunc` is attached to it that always returns code 500.
+The cloud functions `AckPubMessage` and `BadAckFunc` test the subscription retries and dead-letter topics.
+
+Main Pub/Sub topic __radio-pluto__, has  cloud http trigger func `BadAckFunc` is attached to it that always returns code 500.
 Since __radio-pluto__ topic is set to retry 5 times, the message will be sent 5 times to `BadAckFunc`. 
 Once all retries fails, the message will be pushed to __pluto-dead-letter__ topic.
 
