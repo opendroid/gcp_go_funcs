@@ -1,7 +1,7 @@
 # Dead Letter Topic
 These functions test the Pub/Sub retries and dead-letter topics.
 
-## Dead Letter Topic
+## Test Cloud Functions
 The cloud functions `AckPubMessage` and `BadAckFunc` test the subscription retries and dead-letter topics.
 
 Main Pub/Sub topic __radio-pluto__, has  cloud http trigger func `BadAckFunc` is attached to it that always returns code 500.
@@ -21,7 +21,7 @@ gcloud functions deploy AckPubMessage --runtime go116 --trigger-topic pluto-dead
 gcloud functions deploy BadAckFunc --runtime go116 --trigger-http --allow-unauthenticated --project=gcp-experiments-334602 --region=us-west1
 ```
 
-### Testing Dead Letter Topic
+### Testing Message Retries
 Pushing messages using command:
 ```shell
 # Push a message to a 'radio-pluto' topic
