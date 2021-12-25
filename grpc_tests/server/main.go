@@ -5,20 +5,27 @@ import (
 	pb "github.com/opendroid/gcp_go_funcs/grpc_tests/notes"
 	"google.golang.org/grpc"
 	"net"
+	"os"
 )
 
 // main host the gRPC server
 func main() {
-	l, err := net.Listen("tcp", "localhost:50051")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		fmt.Printf(`{"severity": "WARNING", "method": "server-main", "port": "%s", "text": "default port"}`, port)
+	}
+
+	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		fmt.Printf(`{"method": "main", "error": "%s", "text": "Failed to listen"}`, err.Error())
+		fmt.Printf(`{"severity": "ERROR", "method": "main", "error": "%s", "text": "Exit on faileing to listen"}`, err.Error())
 		return
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterNotesServiceServer(s, &notesServer{})
-	fmt.Printf(`{"method": "main", "text": "gRPC listening at %v"}`, l.Addr())
+	fmt.Printf(`{"severity": "DEBUG", "method": "main", "text": "gRPC listening at %v"}`, l.Addr())
 	if err := s.Serve(l); err != nil {
-		fmt.Printf(`{"method": "main", "error": "%s", "text": "Failed to serve"}`, err.Error())
+		fmt.Printf(`{"severity": "ERROR", "method": "main", "error": "%s", "text": "exiting on failure to serve"}`, err.Error())
 	}
 }

@@ -4,7 +4,7 @@ type: google.api.Service
 config_version: 3
 
 # Name of the service configuration.
-name: notes.endpoints.gcp-experiments-334602.cloud.goog
+name: notesgrpc.endpoints.gcp-experiments-334602.cloud.goog
 
 # API title to appear in the user interface (Google Cloud Console).
 title: Hello gRPC API

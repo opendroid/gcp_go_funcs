@@ -20,6 +20,8 @@ brew upgrade protobuf
 
 ### Deploy Service Definition
 
+Note: that http2 need to be enabled.
+
 Generate a PB file, that will be used with service deploy
 ```shell
 # Generate the client files, note use 'source_relative' to generate .notes.go file in same directory
@@ -52,36 +54,48 @@ It has three directories:
 # Make sure to fetch latest
 go get -u github.com/opendroid/gcp_go_funcs/grpc_tests/notes
 go get google.golang.org/grpc
+# If seeing issues with protobuf
+go get -u
+go mod tidy
 ```
 
 ### First time deployment
 ```shell
 # Be in server directory
-cd serer 
+cd server 
 # Deploying CloudRun
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
-# Build and push container images.
-gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/grpc-notes
+# New: New migrate to this
+gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v8
+# New: Allow UnAuth, use http2
+gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v8 --allow-unauthenticated --use-http2
+# Get the host name of the notes service. --format='value(status.url)'
+gcloud run services describe notes 
 
-# Deploy notes service for private access.
-gcloud run deploy notes-upstream --image gcr.io/$GOOGLE_CLOUD_PROJECT/grpc-notes
-
-# Get the host name of the notes service.
-NOTES_URL=$(gcloud run services describe notes-upstream --format='value(status.url)')
-NOTES_DOMAIN=${NOTES_URL#https://}
-
-# Deploy notes-relay service for public access.
-gcloud run deploy notes --image gcr.io/$GOOGLE_CLOUD_PROJECT/grpc-notes \
-    --update-env-vars GRPC_NOTES_HOST=${NOTES_DOMAIN}:443 \
-    --allow-unauthenticated
 ```
 
 ### Subsequent deployment
 
 ```shell
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
-gcloud run deploy notes --image gcr.io/$GOOGLE_CLOUD_PROJECT/grpc-notes
-gcloud run deploy notes-relay --image gcr.io/$GOOGLE_CLOUD_PROJECT/grpc-notes
+gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v6
+```
+
+### Local docker build
+
+```shell
+# Build image
+docker build -t notes:v2 .
+
+# Run gRPC server, on local docker
+docker run -d -p 8080:8080 notes:v2 ./grpc_test_server
+# Or, run gRPC server on local machine
+go run main.go notes.go
+ 
+# Run client, set NOTES_GRPC_ADDRESS server address to local
+NOTES_GRPC_ADDRESS="localhost:8080" go run main.go
+# Or, Test client with Cloud run GRPC notes server
+NOTES_GRPC_ADDRESS="notes-2dbml6flea-wl.a.run.app:443" go run main.go
 ```
 
 ### Update service API documentation

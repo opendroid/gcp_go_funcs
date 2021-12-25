@@ -3,8 +3,8 @@
 type: google.api.Service
 config_version: 3
 
-# Name of the 'notes' configuration.
-name: notes.endpoints.gcp-experiments-334602.cloud.goog
+# Name of the 'notesgrpc' configuration. Note `*grpc` is required for it to deploy.
+name: notesgrpc.endpoints.gcp-experiments-334602.cloud.goog
 
 # API title to appear in the user interface (Google Cloud Console).
 title: Notes gRPC Test API

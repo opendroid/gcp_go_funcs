@@ -3,7 +3,7 @@ module github.com/opendroid/gcp_go_funcs/grpc_tests/server
 go 1.17
 
 require (
-	github.com/opendroid/gcp_go_funcs v0.0.0-20211224043322-a62d8ef9bdcc
+	github.com/opendroid/gcp_go_funcs v0.0.0-20211224064244-6612fe74a4b3
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 )
