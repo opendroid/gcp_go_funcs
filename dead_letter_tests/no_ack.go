@@ -15,9 +15,10 @@ import (
 // AckPubMessage test a message
 func AckPubMessage(_ context.Context, m *pubsub.Message) error {
 	if string(m.Data) != "" {
-		fmt.Printf(`{"severity": "INFO", "method": "AckPubMessage", "data": %s}`, m.Data)
+		m := fmt.Sprintf(`{"severity": "INFO", "method": "AckPubMessage", "data": %s}`, m.Data)
+		fmt.Println(m)
 	} else {
-		fmt.Printf(`{"severity"": "INFO", "method": "AckPubMessage", "data": "no-data"}`)
+		fmt.Println(`{"severity"": "INFO", "method": "AckPubMessage", "data": "no-data"}`)
 	}
 	return nil
 }
@@ -32,7 +33,8 @@ type pushMessageRequest struct {
 func BadAckFunc(w http.ResponseWriter, r *http.Request) {
 	var msg pushMessageRequest
 	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-		fmt.Printf(`{"severity": "ERROR", "message": "Request not formatted", "method": "BadAckFunc", "error": "%s"}`, err.Error())
+		m := fmt.Sprintf(`{"severity": "ERROR", "message": "Request not formatted", "method": "BadAckFunc", "error": "%s"}`, err.Error())
+		fmt.Println(m)
 		return
 	}
 	_ = r.Body.Close()
@@ -40,9 +42,11 @@ func BadAckFunc(w http.ResponseWriter, r *http.Request) {
 		if msg.Message.DeliveryAttempt != nil { // Note that this is not set yet.
 			data += fmt.Sprintf(`, "attempt": %d`, *msg.Message.DeliveryAttempt)
 		}
-		fmt.Printf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s", "data": %s}`, msg.Subscription, data)
+		m := fmt.Sprintf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s", "data": %s}`, msg.Subscription, data)
+		fmt.Println(m)
 	} else {
-		fmt.Printf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s"}`, msg.Subscription)
+		m := fmt.Sprintf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s"}`, msg.Subscription)
+		fmt.Println(m)
 	}
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
 }

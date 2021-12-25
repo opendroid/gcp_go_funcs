@@ -1,2 +1,3 @@
 # gcp_go_funcs
-GCP test cloud functions in Golang 
+
+This repo contains code to test various GCP products. 

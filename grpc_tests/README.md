@@ -118,8 +118,10 @@ Use these commands to deploy the Cloud Run version of server:
 ```shell
 cd server # Be in server directory 
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
+# Build the image and keep it in Artifact Repository (not GCR)
+gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v9
 # Deploy: Allow UnAuthenticated, use http2
-gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v8 \
+gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v9 \
   --allow-unauthenticated --use-http2
 gcloud run services describe notes  # Check the service configuration, if HTTP2 is enabled
 # Client: Test with Cloud run GRPC notes server using command: (in 'client' dir)
@@ -134,3 +136,4 @@ NOTES_GRPC_ADDRESS="notes-2dbml6flea-wl.a.run.app:443" go run main.go
 - [Cloud Run gRPC](https://cloud.google.com/run/docs/triggering/grpc)
 - [Regenerate gRPC code](https://grpc.io/docs/languages/go/quickstart/#regenerate-grpc-code)
 - [New Go API for Protobuf](https://go.dev/blog/protobuf-apiv2)
+- [Artifact Registry](https://cloud.google.com/artifact-registry/docs)

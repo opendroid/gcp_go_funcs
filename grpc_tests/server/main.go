@@ -13,19 +13,23 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
-		fmt.Printf(`{"severity": "WARNING", "method": "server-main", "port": "%s", "text": "default port"}`, port)
+		m := fmt.Sprintf(`{"severity": "WARNING", "method": "server-main", "port": "%s", "text": "default port"}`, port)
+		fmt.Println(m)
 	}
 
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		fmt.Printf(`{"severity": "ERROR", "method": "main", "error": "%s", "text": "Exit on faileing to listen"}`, err.Error())
+		m := fmt.Sprintf(`{"severity": "ERROR", "method": "main", "error": "%s", "text": "Exit on faileing to listen"}`, err.Error())
+		fmt.Println(m)
 		return
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterNotesServiceServer(s, &notesServer{})
-	fmt.Printf(`{"severity": "DEBUG", "method": "main", "text": "gRPC listening at %v"}`, l.Addr())
+	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "main", "text": "gRPC listening at %v"}`, l.Addr())
+	fmt.Println(m)
 	if err := s.Serve(l); err != nil {
-		fmt.Printf(`{"severity": "ERROR", "method": "main", "error": "%s", "text": "exiting on failure to serve"}`, err.Error())
+		m := fmt.Sprintf(`{"severity": "ERROR", "method": "main", "error": "%s", "text": "exiting on failure to serve"}`, err.Error())
+		fmt.Println(m)
 	}
 }

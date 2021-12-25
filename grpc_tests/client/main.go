@@ -31,7 +31,8 @@ func main() {
 	if addr := os.Getenv("NOTES_GRPC_ADDRESS"); addr != "" {
 		hostPort = addr
 	}
-	fmt.Printf(`{"severity": "DEBUG", "method": "client-main", "text": "trying host", "host": "%s"}`, hostPort)
+	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "client-main", "text": "trying host", "host": "%s"}`, hostPort)
+	fmt.Println(m)
 	// Note: gRPC client app must handle TLS, per https://ahmet.im/blog/grpc-auth-cloud-run/
 	if strings.Contains(hostPort, GCPCloudRunEndpoint) {
 		cred := credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
@@ -43,7 +44,8 @@ func main() {
 	// opts = append(opts, grpc.WithInsecure())
 	conn, err := grpc.Dial(hostPort, opts...)
 	if err != nil {
-		fmt.Printf(`{"severity": "ERROR", "method": "client-main", "error": %q, "text": "Failed to dial"}`, err.Error())
+		m := fmt.Sprintf(`{"severity": "ERROR", "method": "client-main", "error": %q, "text": "Failed to dial"}`, err.Error())
+		fmt.Println(m)
 		return
 	}
 	defer func() { _ = conn.Close() }()
@@ -60,12 +62,13 @@ func createNote(c notespb.NotesServiceClient) {
 	ans, err := c.CreateNote(ctx, createNoteRequest())
 
 	if err != nil {
-		fmt.Printf(`{"severity": "DEBUG", "ERROR": "createNote", "response": %q}`, err.Error())
+		m := fmt.Sprintf(`{"severity": "DEBUG", "ERROR": "createNote", "response": %q}`, err.Error())
+		fmt.Println(m)
 		return
 	}
-
-	fmt.Printf(`{"severity": "DEBUG", "method": "createNote", "text": "%s"}`,
+	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "createNote", "text": "%s"}`,
 		ans.GetErrMessage())
+	fmt.Println(m)
 }
 
 // getNotesByAuthor fetches all notes by an author
@@ -74,13 +77,15 @@ func getNotesByAuthor(c notespb.NotesServiceClient, author string) {
 	defer cancel()
 	ans, err := c.GetNotesByAuthor(ctx, &notespb.GetNotesByAuthorRequest{Author: AuthorID})
 	if err != nil {
-		fmt.Printf(`{"severity": "ERROR", "method": "getNotesByAuthor", "response": %q}`, err.Error())
+		m := fmt.Sprintf(`{"severity": "ERROR", "method": "getNotesByAuthor", "response": %q}`, err.Error())
+		fmt.Println(m)
 		return
 	}
 	// print all notes fetched
 	notes := ans.GetNotes()
 	if len(notes) == 0 {
-		fmt.Printf(`{"severity": "DEBUG", "method": "getNotesByAuthor", "text": "no notes by author", "author": "%s"}`, author)
+		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "getNotesByAuthor", "text": "no notes by author", "author": "%s"}`, author)
+		fmt.Println(m)
 		return
 	}
 	for i, n := range notes {
@@ -91,8 +96,9 @@ func getNotesByAuthor(c notespb.NotesServiceClient, author string) {
 			}
 		}
 		locations += "]"
-		fmt.Printf(`{"severity": "DEBUG", "method": "getNotesByAuthor", "note": %d, "id": "%s", "text": "%s", "at": "%s", "locations": %s}`,
+		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "getNotesByAuthor", "note": %d, "id": "%s", "text": "%s", "at": "%s", "locations": %s}`,
 			i+1, n.GetId(), n.GetText(), n.CreatedAt.AsTime(), locations)
+		fmt.Println(m)
 	}
 }
 
