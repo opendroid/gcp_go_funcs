@@ -48,12 +48,12 @@ func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteR
 			lat := loc.Latitude
 			long := loc.Longitude
 			at := loc.At.AsTime()
-			m := fmt.Sprintf(`{"severity": "DEBUG", "method": "CreateNote", "noteID": "%s", "author": "%s", "lat": %f, "long": %f, "at": "%s"}`,
+			m := fmt.Sprintf(`{"severity": "DEBUG", "method": "CreateNote", "noteID": "%s", "message": "created note with location", "author": "%s", "lat": %f, "long": %f, "at": "%s"}`,
 				request.GetNote().GetId(), request.GetAuthor(), lat, long, at.String())
 			fmt.Println(m)
 		}
 	} else {
-		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "CreateNote", "noteID": "%s", "author": "%s"}`,
+		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "CreateNote", "noteID": "%s", "author": "%s", "message": "created note without location"}`,
 			request.GetNote().GetId(), request.GetAuthor())
 		fmt.Println(m)
 	}
@@ -89,7 +89,7 @@ func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteR
 
 // GetNote that is a specific UUID and by Author
 func (s *notesServer) GetNote(_ context.Context, _ *notespb.GetNoteRequest) (*notespb.GetNoteResponse, error) {
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNote", "text": "implement me"}`)
+	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNote", "message": "implement me"}`)
 	fmt.Println(m)
 	now := timestamppb.Now()
 	return &notespb.GetNoteResponse{Note: &notespb.Note{
@@ -106,11 +106,10 @@ func (s *notesServer) GetNote(_ context.Context, _ *notespb.GetNoteRequest) (*no
 func (s *notesServer) GetNotesByAuthor(_ context.Context, request *notespb.GetNotesByAuthorRequest) (*notespb.GetNotesByAuthorResponse, error) {
 	author := request.GetAuthor()
 	if author == "" {
-		fmt.Println(`{"severity": "WARNING", "method": "GetNotesByAuthor", "text": "need author UUID"}`)
+		fmt.Println(`{"severity": "WARNING", "method": "GetNotesByAuthor", "message": "need author UUID"}`)
 		return nil, fmt.Errorf("GetNotesByAuthor: need author UUID")
 	}
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNotesByAuthor", "author": "%s"}`, author)
-	fmt.Println(m)
+
 	// Copy all notes data.
 	if n, ok := notes.Load(author); ok {
 		if nd, valid := n.([]Note); valid && len(nd) > 0 { // nd, Notes data
@@ -131,8 +130,12 @@ func (s *notesServer) GetNotesByAuthor(_ context.Context, request *notespb.GetNo
 					} // Add each location
 				}
 			}
+			m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNotesByAuthor", "message": "%d notes by the author", "author": "%s"}`, len(nd), author)
+			fmt.Println(m)
 			return &notespb.GetNotesByAuthorResponse{Notes: nptrs}, nil
 		}
 	}
+	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNotesByAuthor", "message": "no notes by the author", "author": "%s"}`, author)
+	fmt.Println(m)
 	return nil, fmt.Errorf("GetNotesByAuthor: no notes by author %s", author)
 }

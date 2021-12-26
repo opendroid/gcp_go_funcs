@@ -42,7 +42,8 @@ service NotesService { // NotesService is the main service.
 ```
 The contract is implemented in [notes.proto](https://github.com/opendroid/gcp_go_funcs/blob/main/grpc_tests/notes/notes.proto)
 file. Take time and thought to create the contract. Once a contract is created, keeping server and
-client side of code in sync becomes harder.
+client side of code in sync becomes harder. Also take a note of how the timestamps are handled between gRPC and
+golang time.Time library.
 
 After writing the gRPC service `notes.proto` definition file, generate the message definition [notes.pb.go](https://github.com/opendroid/gcp_go_funcs/blob/main/grpc_tests/notes/notes.pb.go)
 and server interface implementation [notes_grpc.pb.go](https://github.com/opendroid/gcp_go_funcs/blob/main/grpc_tests/notes/notes_grpc.pb.go), using command:
@@ -113,8 +114,7 @@ NOTES_GRPC_ADDRESS="localhost:8080" go run main.go
 
 #### Deploying to GCP Cloud Run
 
-| :exclamation: | For streaming gRPC, enable http2 |
-|:----------:|:---------------------------------|
+> **NOTE** :exclamation: For streaming gRPC, enable http2
 
 To deploy the server in __Cloud Run__ be in `server` directory. First make sure that the auth and GCP projects are set up appropriately:
 ```shell
@@ -127,14 +127,15 @@ Use these commands to deploy the Cloud Run version of server:
 cd server # Be in server directory 
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
 # Build the image and keep it in Artifact Repository (not GCR)
-gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v9
+gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v12
 # Deploy: Allow UnAuthenticated, use http2
-gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v9 \
-  --allow-unauthenticated --use-http2
+gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v12 --allow-unauthenticated --use-http2
 gcloud run services describe notes  # Check the service configuration, if HTTP2 is enabled
 # Client: Test with Cloud run GRPC notes server using command: (in 'client' dir)
 NOTES_GRPC_ADDRESS="notes-2dbml6flea-wl.a.run.app:443" go run main.go
 ```
+When testing the CloudRun instance of the gRPC server, the client should check if the trust of TLS certificate.
+The test code does not shut down the gRPC server gracefully. To do so [capture the syscall.SIGTERM](https://dev.to/amammay/effective-go-on-cloud-run-graceful-application-shutdown-2n20). 
 
 ## References
 - [GRPC status codes](https://developers.google.com/maps-booking/reference/grpc-api/status_codes)
@@ -145,3 +146,7 @@ NOTES_GRPC_ADDRESS="notes-2dbml6flea-wl.a.run.app:443" go run main.go
 - [Regenerate gRPC code](https://grpc.io/docs/languages/go/quickstart/#regenerate-grpc-code)
 - [New Go API for Protobuf](https://go.dev/blog/protobuf-apiv2)
 - [Artifact Registry](https://cloud.google.com/artifact-registry/docs)
+- [Trapping signals in Docker containers](https://medium.com/@gchudnov/trapping-signals-in-docker-containers-7a57fdda7d86)
+- [Graceful shutdowns on Cloud Run: Deep dive](https://cloud.google.com/blog/topics/developers-practitioners/graceful-shutdowns-cloud-run-deep-dive)
+- [Google Cloud Run - FAQ](https://github.com/ahmetb/cloud-run-faq#what-is-the-termination-signal-for-cloud-run-services)
+- [Implementing Graceful Shutdown in Go](https://rudderstack.com/blog/implementing-graceful-shutdown-in-go/)
