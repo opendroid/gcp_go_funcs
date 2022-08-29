@@ -89,9 +89,12 @@ go mod tidy
 Once we can successfully build, deploy to __Local docker__ or __Cloud Run__ environments.
 
 Note that if you are making changes to `notes` definition, during development you may set the:
+Starting go 1.18 we can use "go.work" to manage local dependencies.
+
 ```shell
-# Temporarily use local notes directory.
-go mod edit -replace github.com/opendroid/gcp_go_funcs/grpc_tests/notes=../notes
+# Temporarily use local "notes" directory.
+go work init
+go work user ./notes
 ```
 However, the relative backward path won't work for crating Docker image as it works in current directory.
 To do that you will need to [clone git-repo into Docker](https://janakerman.co.uk/docker-git-clone/).
