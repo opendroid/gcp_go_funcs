@@ -1,17 +1,17 @@
 module github.com/opendroid/gcp_go_funcs/grpc_tests/server
 
-go 1.17
+go 1.19
 
 require (
-	github.com/opendroid/gcp_go_funcs/grpc_tests/notes v0.0.0-20211225012730-3c014f07726e
-	google.golang.org/grpc v1.43.0
-	google.golang.org/protobuf v1.27.1
+	github.com/opendroid/gcp_go_funcs/grpc_tests/notes v0.0.0-20220809221213-4ffd52c87be9
+	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
 )
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
-	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
+	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
+	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
+	google.golang.org/genproto v0.0.0-20220822174746-9e6da59bd2fc // indirect
 )
