@@ -1,6 +1,6 @@
 # tests gRPC API in a cloud run environment
 
-The `grpc_tests` demonstrates how to implement a [gRPC](https://grpc.io/docs/what-is-grpc/introduction/) service, and 
+The `grpc_tests` demonstrates how to implement a [gRPC](https://grpc.io/docs/what-is-grpc/introduction/) service, and
 deploy it on [GCP Cloud Run](https://cloud.google.com/endpoints/docs/grpc/about-grpc).
 We can also host gRPC servers on [CloudRun, GKE or Compute Engine](https://cloud.google.com/endpoints/docs/grpc/about-grpc).
 It is not available on CloudFunctions or GAE.
@@ -25,7 +25,7 @@ The service allows a client to:
 
 ### Defining `notes` Contract
 
-The service is defined in `notes` directory. You may choose to create the client, server and .proto definitions as 
+The service is defined in `notes` directory. You may choose to create the client, server and .proto definitions as
 separate repos. It will make dependency management easier. The sample `notes` service contract is:
 ```protobuf
 message CreateNoteRequest {} // rpc request format to create a note
@@ -58,7 +58,7 @@ protoc --go_out=. --go_opt=paths=source_relative \
 The `notes/out.pb` file is used to deploy and/or document the endpoints.
 
 #### GCP Endpoints
-We can also document the Service definitions in [GCP Endpoints](https://cloud.google.com/endpoints). 
+We can also document the Service definitions in [GCP Endpoints](https://cloud.google.com/endpoints).
 We have not configured this yet. The sample `endpoint` commands are:
 ```shell
 # Deploy no auth version
@@ -72,8 +72,8 @@ We need to install `protoc` on your computer. On macOS use `brew`:
 ```shell
  # Install protoc, installs protoc
 brew install protobuf
-# Upgrade protobuf 
-brew upgrade protobuf 
+# Upgrade protobuf
+brew upgrade protobuf
 ```
 ### Build Server Component
 Goto the `server` directory, and build it (properly), fetch the right dependencies.
@@ -96,7 +96,8 @@ Starting go 1.18 we can use "go.work" to manage local dependencies.
 go work init
 go work user ./notes
 ```
-However, the relative backward path won't work for crating Docker image as it works in current directory.
+
+However, the relative backward path wont work for crating Docker image as it works in current directory.
 To do that you will need to [clone git-repo into Docker](https://janakerman.co.uk/docker-git-clone/).
 
 #### Deploying to Local docker
@@ -124,10 +125,10 @@ To deploy the server in __Cloud Run__ be in `server` directory. First make sure 
 gcloud config set account ajaythakur1972@gmail.com # Make sure you have right login
 gcloud config configurations activate gcp-experiments # Activate right project
 ```
-The Cloud Run exposes the gRPC on [port 443](https://ahmet.im/blog/grpc-auth-cloud-run/). 
+The Cloud Run exposes the gRPC on [port 443](https://ahmet.im/blog/grpc-auth-cloud-run/).
 Use these commands to deploy the Cloud Run version of server:
 ```shell
-cd server # Be in server directory 
+cd server # Be in server directory
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
 # Build the image and keep it in Artifact Repository (not GCR)
 gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v12
@@ -138,7 +139,7 @@ gcloud run services describe notes  # Check the service configuration, if HTTP2 
 NOTES_GRPC_ADDRESS="notes-2dbml6flea-wl.a.run.app:443" go run main.go
 ```
 When testing the CloudRun instance of the gRPC server, the client should check if the trust of TLS certificate.
-The test code does not shut down the gRPC server gracefully. To do so [capture the syscall.SIGTERM](https://dev.to/amammay/effective-go-on-cloud-run-graceful-application-shutdown-2n20). 
+The test code does not shut down the gRPC server gracefully. To do so [capture the syscall.SIGTERM](https://dev.to/amammay/effective-go-on-cloud-run-graceful-application-shutdown-2n20).
 
 ## References
 - [GRPC status codes](https://developers.google.com/maps-booking/reference/grpc-api/status_codes)
