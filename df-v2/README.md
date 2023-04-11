@@ -24,7 +24,8 @@ Other examples:
 gcloud beta functions deploy cx-webhook --gen2 --runtime go119 --trigger-http --entry-point HandleWebhookRequest --source . --project=ajayt-cx-experiments --region=us-central1
 
 # Echo fun
-gcloud beta functions deploy log-test --gen2 --runtime go119 --trigger-http --entry-point  Echo --source . --project=the-gpl  --region=us-central1
+gcloud beta functions deploy log-test-v2 --gen2 --runtime go119 --trigger-http --entry-point  ManojS --source . --project=the-gpl  --region=us-central1
+gcloud beta functions deploy log-test-v3 --runtime go119 --trigger-http --entry-point  ManojS --source . --project=the-gpl  --region=us-central1
 
 # Get details
 gcloud beta functions describe cx-webhook --gen2 --region=us-central1

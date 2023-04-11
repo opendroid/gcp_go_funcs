@@ -20,3 +20,5 @@
 *.pb
 # Ignore work files
 go.work
+
+data/
