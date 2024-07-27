@@ -3,7 +3,7 @@ package df_v2
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"cloud.google.com/go/logging"
@@ -19,7 +19,7 @@ func init() {
 // helloShirts is an HTTP Cloud Function.
 func helloShirts(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = r.Body.Close() }()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		_, _ = fmt.Fprintf(w, "Error reading request body: %v", err)
 		return
@@ -32,7 +32,7 @@ func helloShirts(w http.ResponseWriter, r *http.Request) {
 func echo(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = r.Body.Close() }()
 	defer logger.Flush() // Ensure the entry is written.
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		_, _ = fmt.Fprintf(w, "Error reading request body: %v", err)
 		return
@@ -46,7 +46,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 // manojS is an HTTP Cloud Function.
 func manojS(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = r.Body.Close() }()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		_, _ = fmt.Fprintf(w, "Error reading request body: %v", err)
 		return

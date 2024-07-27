@@ -3,9 +3,10 @@ package df_v2
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"log"
 	"net/http"
+
+	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 )
 
 type fulfillmentInfo struct {
@@ -48,7 +49,7 @@ type webhookResponse struct {
 }
 
 // confirm handles webhook calls using the "confirm" tag.
-func welcome(request webhookRequest) (webhookResponse, error) {
+func welcome(_ webhookRequest) (webhookResponse, error) {
 	// Build and return the response.
 	response := webhookResponse{
 		FulfillmentResponse: fulfillmentResponse{
@@ -130,7 +131,7 @@ func handleWebhookRequest(w http.ResponseWriter, r *http.Request) {
 	case "confirm":
 		response, err = confirm(request)
 	default:
-		err = fmt.Errorf("Unknown tag: %s", tag)
+		err = fmt.Errorf("unknown tag: %s", tag)
 	}
 	if err != nil {
 		handleError(w, err)

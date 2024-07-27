@@ -7,7 +7,7 @@ import (
 	"cloud.google.com/go/logging"
 )
 
-// Note that to pipe zap to GCP logger, see gcloudzap
+// Note that to pipe zap to GCP logger, see [gcloudzap]
 // [gcloudzap]: https://pkg.go.dev/github.com/jonstaryuk/gcloudzap
 
 var (
