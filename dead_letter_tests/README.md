@@ -2,9 +2,13 @@
 These functions test the Pub/Sub retries and dead-letter topics.
 
 ## Test Cloud Functions
-The cloud functions `AckPubMessage` and `BadAckFunc` test the subscription retries and dead-letter topics.
 
-Main Pub/Sub topic __radio-pluto__, has  cloud http trigger func `BadAckFunc` is attached to it that always returns code 500.
+First deploy the pub-sub-triggered and HTTP function using --gen2, it uses cloud run to deploy functions.
+The configure the topics and subscriptions. Enable  "Push authentication" with audience URL as your cloud-run URL. Also 
+make sure to provide the "Cloud Run Invoker" and "Cloud Function Invoker" permission to cloud-run service account.
+
+In this example, the cloud functions `AckPubMessage` and `BadAckFunc` tests the subscription retries and dead-letter topics.
+Main Pub/Sub topic __radio-pluto__, has  cloud http trigger func `BadAckFunc` is attached to it. This always returns code 500.
 Since __radio-pluto__ topic is set to retry 5 times, the message will be sent 5 times to `BadAckFunc`. 
 Once all retries fails, the message will be pushed to __pluto-dead-letter__ topic.
 
@@ -14,11 +18,12 @@ consumes it. Once consumed message is discarded (if configured).
 ```shell
 # Activate  right project configuration
 gcloud config configurations activate gcp-experiments
-# Note that --runtime go116  is supported as beta
-# https://cloud.google.com/functions/docs/concepts/go-runtime
-gcloud functions deploy AckPubMessage --runtime go116 --trigger-topic pluto-dead-letter --project=gcp-experiments-334602
+# Note that --runtime go122  is supported 
+# https://cloud.google.com/functions/docs/runtime-support#go
+# Ensure that the Cloud functions has permission "Cloud Run Invoker" and "Cloud Function Invoker"
+gcloud functions deploy AckPubMessage  --gen2 --runtime go122 --trigger-topic pluto-dead-letter --project=gcp-experiments-334602
 # Deploy a http func so we can return a error code (to test retry and dead-letter)
-gcloud functions deploy BadAckFunc --runtime go116 --trigger-http --allow-unauthenticated --project=gcp-experiments-334602 --region=us-west1
+gcloud functions deploy BadAckFunc  --gen2 --runtime go122 --trigger-http --project=gcp-experiments-334602
 ```
 
 ### Testing Message Retries

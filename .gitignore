@@ -22,3 +22,7 @@
 go.work
 
 data/
+
+# Ignore vscode settings
+.vscode/
+
