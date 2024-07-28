@@ -116,6 +116,29 @@ docker run --rm -p 8080:8080 notes:v1 ./grpc_test_server
 NOTES_GRPC_ADDRESS="localhost:8080" go run main.go
 ```
 
+##### GCP Artifact Registry
+
+Note that you can use the docker command to tag and push the repository to GCP Artifact Registry. Note that the 
+[Container Registry](https://cloud.google.com/artifact-registry/docs/transition/transition-from-gcr) is deprecated.
+
+First create a Artifact Registry from the GCP console UX (or using gcloud). The format of the artifact regustry link is
+$GCP_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/$REG_NAME/$BUILD_NAME:$VERSION
+
+So once you create a docker image:
+```shell
+# Build a local docker image, then tag it
+docker build -t notes-server:v1 .
+docker tag notes-server:v1 us-central1-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/notes-grpc-server/notes-server:v1
+# Push the docker image to artifact registry
+docker push us-central1-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/notes-grpc-server/notes-server:v1
+```
+
+You can also use gcloud build to push the image directly, please modily the Dockerfile and clouldbuild.yaml to change version names.
+
+```shell
+gcloud builds submit --config cloudbuild.yaml --project $GOOGLE_CLOUD_PROJECT
+```
+
 #### Deploying to GCP Cloud Run
 
 > **NOTE** :exclamation: For streaming gRPC, enable http2
@@ -131,12 +154,12 @@ Use these commands to deploy the Cloud Run version of server:
 cd server # Be in server directory
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
 # Build the image and keep it in Artifact Repository (not GCR)
-gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v12
+gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/notes-grpc-server/notes-server:v1
 # Deploy: Allow UnAuthenticated, use http2
-gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/grpc-notes/notes:v12 --allow-unauthenticated --use-http2
+gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/notes-grpc-server/notes-server:v1 --allow-unauthenticated --use-http2
 gcloud run services describe notes  # Check the service configuration, if HTTP2 is enabled
 # Client: Test with Cloud run GRPC notes server using command: (in 'client' dir)
-NOTES_GRPC_ADDRESS="notes-2dbml6flea-wl.a.run.app:443" go run main.go
+NOTES_GRPC_ADDRESS="https://notes-2dbml6flea-uc.a.run.app" go run main.go
 ```
 When testing the CloudRun instance of the gRPC server, the client should check if the trust of TLS certificate.
 The test code does not shut down the gRPC server gracefully. To do so [capture the syscall.SIGTERM](https://dev.to/amammay/effective-go-on-cloud-run-graceful-application-shutdown-2n20).

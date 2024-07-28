@@ -5,22 +5,22 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 	notespb "github.com/opendroid/gcp_go_funcs/grpc_tests/notes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"os"
-	"strings"
-	"time"
 )
 
 const (
 	AuthorID            = "3627fb6e-8f9c-4418-adea-e66efb467ecd"
 	TimeOut             = time.Second * 10
-	GCPCloudRunHost     = "notes-2dbml6flea-wl.a.run.app"
-	GCPCloudRunHostPort = GCPCloudRunHost + ":443"
+	GCPCloudRunHost     = "notes-2dbml6flea-uc.a.run.app"
 	GCPCloudRunEndpoint = "run.app"
 )
 
@@ -28,7 +28,7 @@ const (
 func main() {
 	// Set up a connection to the server.
 	var opts []grpc.DialOption
-	hostPort := GCPCloudRunHostPort
+	hostPort := GCPCloudRunHost
 	if addr := os.Getenv("NOTES_GRPC_ADDRESS"); addr != "" {
 		hostPort = addr
 	}
@@ -49,9 +49,10 @@ func main() {
 	} else {
 		// Insecure for localhost:8080 testing.
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		fmt.Println(`{"severity": "INFO", "method": "client-main", "message": "Proceeding without TLS"}`)
 	}
 	// opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial(hostPort, opts...)
+	conn, err := grpc.NewClient(hostPort, opts...)
 	if err != nil {
 		m := fmt.Sprintf(`{"severity": "ERROR", "method": "client-main", "error": %q, "text": "Failed to dial"}`, err.Error())
 		fmt.Println(m)

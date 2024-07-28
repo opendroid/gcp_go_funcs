@@ -39,6 +39,6 @@ spec:
           ports:
             - containerPort: 9000
         - name: echo
-          image: gcr.io/gcp-experiments-334602/grpc_test_server:1.0
+          image: us-central1-docker.pkg.dev/gcp-experiments-334602/notes-grpc-server/notes-server:v4
           ports:
             - containerPort: 50051

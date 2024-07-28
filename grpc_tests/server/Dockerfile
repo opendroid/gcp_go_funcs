@@ -2,7 +2,7 @@
 # Sample https://cloud.google.com/run/docs/quickstarts/build-and-deploy?_ga=2.91290522.-1679093051.1593441137
 
 # Start from the latest golang base image
-FROM golang:1.22 as builder
+FROM golang:1.22 AS builder
 
 # Add Maintainer Info
 LABEL maintainer="Open Web <plutoapps@outlook.com>"
@@ -19,7 +19,7 @@ COPY . ./
 
 # Build the binary.
 # -mod=readonly ensures immutable go.mod and go.sum in container builds.
-RUN CGO_ENABLED=0 GOOS=linux go build -mod=readonly -v -o grpc_test_server
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=readonly -v -o grpc_notes_server
 
 # Use the official Alpine image for a lean production container.
 # https://hub.docker.com/_/alpine
@@ -30,10 +30,12 @@ FROM alpine:latest
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
 
 # Copy the binary to the production image from the builder stage.
-COPY --from=builder /app/grpc_test_server /grpc_test_server
+COPY --from=builder /app/grpc_notes_server /grpc_notes_server
 
 # Expose port 8080 to the outside world
-# EXPOSE 8080
+EXPOSE 8080
+EXPOSE 50051
+EXPOSE 8081
 
 # Command to run the executable
-CMD ["/grpc_test_server"]
+CMD ["/grpc_notes_server"]
