@@ -60,8 +60,8 @@ go build ./dead_letter_tests/... ./df-v2/... ./grpc_tests/client/... ./grpc_test
 
 Implements Dialogflow CX webhook handling (`HandleWebhookRequest`) and HTTP utility functions.
 
-* **Structured Logging**: Uses standard library `log/slog` configured for JSON output to `os.Stdout`, which Cloud Run and Cloud Logging ingest automatically.
-* **Deployment with `gcloud run deploy`**:
+- **Structured Logging**: Uses standard library `log/slog` configured for JSON output to `os.Stdout`, which Cloud Run and Cloud Logging ingest automatically.
+- **Deployment with `gcloud run deploy`**:
 
 ```shell
 # Deploy Dialogflow CX Webhook
@@ -110,8 +110,8 @@ radio-pluto
      AckPubMessage (Cloud Run Function -> HTTP 200)
 ```
 
-* **Push Authentication & Audience**: Proper configuration to ensure Cloud Run accepts OIDC ID tokens without 401/403 errors.
-* **Topic URL Routing**: Setting push endpoint path patterns to `/projects/PROJECT_ID/topics/TOPIC_NAME` for proper Functions Framework topic detection.
+- **Push Authentication & Audience**: Proper configuration to ensure Cloud Run accepts OIDC ID tokens without 401/403 errors.
+- **Topic URL Routing**: Setting push endpoint path patterns to `/projects/PROJECT_ID/topics/TOPIC_NAME` for proper Functions Framework topic detection.
 
 See [dead_letter_tests/README.md](dead_letter_tests/README.md) for step-by-step IAM permissions, subscription commands, and test verification.
 
@@ -121,9 +121,9 @@ See [dead_letter_tests/README.md](dead_letter_tests/README.md) for step-by-step 
 
 Demonstrates an end-to-end gRPC service (`NotesService`) running on Cloud Run:
 
-* `grpc_tests/notes`: Protobuf definitions and generated Go stubs.
-* `grpc_tests/server`: Multi-stage Dockerfile packaging the gRPC server.
-* `grpc_tests/client`: Demo client connecting over TLS / HTTP/2.
+- `grpc_tests/notes`: Protobuf definitions and generated Go stubs.
+- `grpc_tests/server`: Multi-stage Dockerfile packaging the gRPC server.
+- `grpc_tests/client`: Demo client connecting over TLS / HTTP/2.
 
 ```shell
 # Deploy gRPC server with HTTP/2 enabled
