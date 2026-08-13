@@ -41,15 +41,38 @@ gcloud services enable \
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Local Quality Checks & Makefile Automation
 
-### Build All Modules
+Each module includes a `Makefile` that runs formatters, linters (`golangci-lint`, `go vet`), unit tests, and compilation checks before deployment.
 
-Using the Go workspace:
+### Workspace-wide Checks
 
 ```shell
-# Build all packages across modules
-go build ./dead_letter_tests/... ./df-v2/... ./grpc_tests/client/... ./grpc_tests/notes/... ./grpc_tests/server/...
+# Run full quality pipeline (fmt, vet, lint, test, build) across all modules
+make check
+
+# Or individual checks
+make fmt      # Format all Go files with gofmt
+make vet      # Run go vet across all modules
+make lint     # Run golangci-lint across all modules
+make test     # Run unit tests across all modules
+make build    # Compile all modules
+```
+
+### Module-specific Makefiles & Deployments
+
+Each sub-directory contains its own `Makefile` with dedicated pre-flight checks and `gcloud` deployment shortcuts:
+
+```shell
+# Deploy df-v2 Cloud Run functions
+make -C df-v2 deploy-all
+
+# Deploy dead_letter_tests Cloud Functions (gen2) & configure push subscription
+make -C dead_letter_tests deploy-all
+make -C dead_letter_tests config-push-sub
+
+# Build container and deploy gRPC service to Cloud Run with HTTP/2
+make -C grpc_tests deploy-all
 ```
 
 ---

@@ -89,7 +89,7 @@ func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteR
 
 // GetNote that is a specific UUID and by Author
 func (s *notesServer) GetNote(_ context.Context, _ *notespb.GetNoteRequest) (*notespb.GetNoteResponse, error) {
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNote", "message": "implement me"}`)
+	m := `{"severity": "DEBUG", "method": "GetNote", "message": "implement me"}`
 	fmt.Println(m)
 	now := timestamppb.Now()
 	return &notespb.GetNoteResponse{Note: &notespb.Note{
