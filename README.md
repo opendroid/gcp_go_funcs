@@ -164,14 +164,16 @@ Demonstrates an end-to-end gRPC service (`NotesService`) running on Cloud Run:
 
 ```shell
 # Deploy gRPC server with HTTP/2 enabled
-gcloud run deploy notes \
-  --image="us-west2-docker.pkg.dev/$GCP_PROJECT/notes-grpc-server/notes-server:v1" \
-  --use-http2 \
-  --allow-unauthenticated \
-  --region="us-west2"
+make -C grpc_tests deploy-all
+
+# Test gRPC client against live Cloud Run deployment
+make -C grpc_tests client-cloud
+
+# Test gRPC client locally against localhost:8080
+make -C grpc_tests client-local
 ```
 
-See [grpc_tests/README.md](grpc_tests/README.md) for proto compilation, local Docker testing, and Cloud Run deployment.
+See [grpc_tests/README.md](grpc_tests/README.md) for proto compilation, local Docker testing, and Cloud Run deployment details.
 
 ---
 

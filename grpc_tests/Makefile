@@ -1,7 +1,7 @@
 # Makefile for grpc_tests (Notes gRPC Service on Cloud Run)
 
 GCP_PROJECT ?= gcp-experiments-334602
-GCP_REGION  ?= us-west2
+GCP_REGION  ?= us-central1
 IMAGE_TAG   ?= us-west2-docker.pkg.dev/$(GCP_PROJECT)/notes-grpc-server/notes-server:v1
 SERVICE     ?= notes
 
@@ -86,9 +86,9 @@ deploy-all: check build-submit deploy ## Full cycle: lint/test -> build containe
 
 client-local: ## Run demo gRPC client pointing to localhost:8080
 	@echo "==> Running demo client against localhost:8080..."
-	cd client && NOTES_GRPC_ADDRESS="localhost:8080" go run main.go
+	cd client && NOTES_GRPC_ADDRESS="localhost:8080" go run .
 
 client-cloud: ## Run demo gRPC client pointing to Cloud Run deployment
 	@URL=$$(gcloud run services describe $(SERVICE) --project=$(GCP_PROJECT) --region=$(GCP_REGION) --format='value(status.url)'); \
 	echo "==> Running demo client against $$URL..."; \
-	cd client && NOTES_GRPC_ADDRESS="$$URL" go run main.go
+	cd client && NOTES_GRPC_ADDRESS="$$URL" go run .

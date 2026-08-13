@@ -187,15 +187,39 @@ cd server # Be in server directory
 export GOOGLE_CLOUD_PROJECT=gcp-experiments-334602
 # Build the image and keep it in Artifact Repository (not GCR)
 gcloud builds submit --tag us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/notes-grpc-server/notes-server:v1
-# Deploy: Allow UnAuthenticated, use http2
-gcloud run deploy notes --image us-west2-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/notes-grpc-server/notes-server:v1 --allow-unauthenticated --use-http2
-gcloud run services describe notes  # Check the service configuration, if HTTP2 is enabled
-# Client: Test with Cloud run GRPC notes server using command: (in 'client' dir)
-NOTES_GRPC_ADDRESS="https://notes-2dbml6flea-uc.a.run.app" go run main.go
+### Testing the gRPC Service
+ 
+#### 1. Testing against Cloud Run (from your laptop)
+ 
+From the workspace root or `grpc_tests/` directory:
+ 
+```shell
+# From repo root:
+make -C grpc_tests client-cloud
+ 
+# Or from grpc_tests directory:
+make client-cloud
 ```
 
-When testing the CloudRun instance of the gRPC server, the client should check if the trust of TLS certificate.
-The test code does not shut down the gRPC server gracefully. To do so [capture the syscall.SIGTERM](https://dev.to/amammay/effective-go-on-cloud-run-graceful-application-shutdown-2n20).
+Or run the Go client manually:
+
+```shell
+cd client
+NOTES_GRPC_ADDRESS="https://notes-2dbml6flea-uc.a.run.app" go run .
+```
+
+#### 2. Testing against Local Docker
+
+```shell
+# Build local docker image
+make -C grpc_tests docker-build
+ 
+# Run docker container on port 8080
+docker run --rm -p 8080:8080 notes-server:v1
+ 
+# Run local client test (in another terminal):
+make -C grpc_tests client-local
+```
 
 ## References
 

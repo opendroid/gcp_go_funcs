@@ -17,9 +17,13 @@ import (
 )
 
 const (
-	AuthorID            = "3627fb6e-8f9c-4418-adea-e66efb467ecd"
-	TimeOut             = time.Second * 10
-	GCPCloudRunHost     = "notes-2dbml6flea-uc.a.run.app"
+	// A temp UUID-based author id for note creation.
+	AuthorID = "3627fb6e-8f9c-4418-adea-e66efb467ecd"
+	// Timeout for gRPC calls.
+	TimeOut = time.Second * 10
+	// Default host for Cloud Run deployment.
+	GCPCloudRunHost = "notes-2dbml6flea-uc.a.run.app"
+	// Endpoint for Cloud Run.
 	GCPCloudRunEndpoint = "run.app"
 )
 
@@ -31,18 +35,31 @@ func main() {
 	if addr := os.Getenv("NOTES_GRPC_ADDRESS"); addr != "" {
 		hostPort = addr
 	}
+
+	// Normalize host (strip protocol prefix if provided by gcloud output)
+	hostPort = strings.TrimPrefix(hostPort, "https://")
+	hostPort = strings.TrimPrefix(hostPort, "http://")
+	hostPort = strings.TrimRight(hostPort, "/")
+	if strings.Contains(hostPort, GCPCloudRunEndpoint) && !strings.Contains(hostPort, ":") {
+		hostPort = hostPort + ":443"
+	}
+
 	logger.Debug("attempting connection to host", "method", "client-main", "host", hostPort)
 
 	// Note: gRPC client app must handle TLS, per https://ahmet.im/blog/grpc-auth-cloud-run/
 	// Check if run.app supplied TLS certificate is trusted
 	if strings.Contains(hostPort, GCPCloudRunEndpoint) {
-		opts = append(opts, grpc.WithAuthority(hostPort))
+		serverName := strings.Split(hostPort, ":")[0]
+		opts = append(opts, grpc.WithAuthority(serverName))
 		systemRoots, err := x509.SystemCertPool()
 		if err != nil {
 			logger.Error("failed to load system root CA cert pool", "method", "client-main", "error", err)
 			return
 		}
-		cred := credentials.NewTLS(&tls.Config{RootCAs: systemRoots})
+		cred := credentials.NewTLS(&tls.Config{
+			ServerName: serverName,
+			RootCAs:    systemRoots,
+		})
 		opts = append(opts, grpc.WithTransportCredentials(cred))
 	} else {
 		// Insecure for localhost:8080 testing.
