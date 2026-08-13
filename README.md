@@ -51,12 +51,16 @@ Each module includes a `Makefile` that runs formatters, linters (`golangci-lint`
 # Run full quality pipeline (fmt, vet, lint, test, build) across all modules
 make check
 
-# Or individual checks
+# Update all Go dependencies to latest versions and tidy across all modules
+make update
+
+# Or individual checks and maintenance
 make fmt      # Format all Go files with gofmt
 make vet      # Run go vet across all modules
 make lint     # Run golangci-lint across all modules
 make test     # Run unit tests across all modules
 make build    # Compile all modules
+make tidy     # Run go mod tidy across all modules
 ```
 
 ### Module-specific Makefiles & Deployments

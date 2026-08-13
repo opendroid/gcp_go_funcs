@@ -4,13 +4,22 @@ GCP_PROJECT ?= gcp-experiments-334602
 GCP_REGION  ?= us-central1
 RUNTIME     ?= go126
 
-.PHONY: help fmt vet lint test build check deploy-cx-webhook deploy-hello-shirts deploy-echo deploy-log-test deploy-all describe-cx describe-hello test-cx
+.PHONY: help fmt vet lint test build check update tidy deploy-cx-webhook deploy-hello-shirts deploy-echo deploy-log-test deploy-all describe-cx describe-hello test-cx
 
 help: ## Show this help message
 	@echo "Usage: make [target] [GCP_PROJECT=... GCP_REGION=...]"
 	@echo ""
 	@echo "Targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+
+update: ## Update Go dependencies to latest versions and tidy
+	@echo "==> Updating dependencies..."
+	go get -u ./...
+	go mod tidy
+
+tidy: ## Run go mod tidy
+	@echo "==> Tidying module..."
+	go mod tidy
 
 fmt: ## Format Go source files
 	@echo "==> Formatting Go files..."

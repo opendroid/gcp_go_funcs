@@ -8,13 +8,22 @@ TOPIC_DEAD_LETTER ?= pluto-dead-letter
 SUB_DEAD_LETTER   ?= dead-letter-reader
 CALLING_SA        ?= 576696822186-compute@developer.gserviceaccount.com
 
-.PHONY: help fmt vet lint test build check deploy-ack deploy-bad-ack deploy-all config-push-sub publish-main publish-dead-letter logs-ack logs-bad-ack
+.PHONY: help fmt vet lint test build check update tidy deploy-ack deploy-bad-ack deploy-all config-push-sub publish-main publish-dead-letter logs-ack logs-bad-ack
 
 help: ## Show this help message
 	@echo "Usage: make [target] [GCP_PROJECT=... GCP_REGION=...]"
 	@echo ""
 	@echo "Targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
+
+update: ## Update Go dependencies to latest versions and tidy
+	@echo "==> Updating dependencies..."
+	go get -u ./...
+	go mod tidy
+
+tidy: ## Run go mod tidy
+	@echo "==> Tidying module..."
+	go mod tidy
 
 fmt: ## Format Go source files
 	@echo "==> Formatting Go files..."

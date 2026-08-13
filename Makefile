@@ -5,7 +5,7 @@ GCP_REGION  ?= us-central1
 
 MODULES := df-v2 dead_letter_tests grpc_tests
 
-.PHONY: help fmt vet lint test build check all clean \
+.PHONY: help fmt vet lint test build check update tidy all clean \
 	deploy-df deploy-dead-letter deploy-grpc
 
 help: ## Show this help message
@@ -15,6 +15,26 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
 
 all: check ## Run all checks across all modules
+
+update: ## Update all Go dependencies to latest versions across all modules
+	@for m in $(MODULES); do \
+		echo "==> Updating dependencies in $$m..."; \
+		$(MAKE) -C $$m update; \
+	done
+	@if [ -f go.work ]; then \
+		echo "==> Syncing workspace go.work..."; \
+		go work sync; \
+	fi
+
+tidy: ## Run go mod tidy across all modules
+	@for m in $(MODULES); do \
+		echo "==> Tidying module in $$m..."; \
+		$(MAKE) -C $$m tidy; \
+	done
+	@if [ -f go.work ]; then \
+		echo "==> Syncing workspace go.work..."; \
+		go work sync; \
+	fi
 
 fmt: ## Format Go source files across all modules
 	@for m in $(MODULES); do \

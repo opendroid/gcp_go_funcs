@@ -5,13 +5,27 @@ GCP_REGION  ?= us-west2
 IMAGE_TAG   ?= us-west2-docker.pkg.dev/$(GCP_PROJECT)/notes-grpc-server/notes-server:v1
 SERVICE     ?= notes
 
-.PHONY: help fmt vet lint test build check proto docker-build build-submit deploy deploy-all client-local client-cloud
+.PHONY: help fmt vet lint test build check update tidy proto docker-build build-submit deploy deploy-all client-local client-cloud
 
 help: ## Show this help message
 	@echo "Usage: make [target] [GCP_PROJECT=... GCP_REGION=...]"
 	@echo ""
 	@echo "Targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+
+update: ## Update Go dependencies to latest versions across grpc_tests modules
+	@echo "==> Updating dependencies in notes..."
+	cd notes && go get -u ./... && go mod tidy
+	@echo "==> Updating dependencies in client..."
+	cd client && go get -u ./... && go mod tidy
+	@echo "==> Updating dependencies in server..."
+	cd server && go get -u ./... && go mod tidy
+
+tidy: ## Run go mod tidy across grpc_tests modules
+	@echo "==> Tidying grpc_tests modules..."
+	cd notes && go mod tidy
+	cd client && go mod tidy
+	cd server && go mod tidy
 
 proto: ## Compile notes.proto with protoc to generate Go gRPC stubs
 	@echo "==> Generating protobuf code..."
