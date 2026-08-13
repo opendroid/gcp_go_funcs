@@ -21,6 +21,12 @@ jobs:
           go-version: '1.26'
           cache: true
 
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          install-only: true
+
       - name: Run Workspace Checks
         run: make check
 
