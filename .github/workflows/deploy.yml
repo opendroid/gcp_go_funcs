@@ -5,6 +5,13 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy_all:
+        description: 'Force deploy all modules'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   # ── 1. Quality Gate (fmt, vet, lint, test, build) ─────────────
@@ -28,11 +35,11 @@ jobs:
       - name: Run Workspace Checks
         run: make check
 
-  # ── 2. CD Deployment (Runs only on push to main) ───────────────
+  # ── 2. CD Deployment (Push to main or manual dispatch) ───────
   deploy:
     name: Deploy Changed Services
     needs: quality-check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -60,16 +67,16 @@ jobs:
               - 'grpc_tests/**'
 
       - name: Deploy Dialogflow CX & Cloud Run Functions
-        if: steps.filter.outputs.df_v2 == 'true'
+        if: steps.filter.outputs.df_v2 == 'true' || inputs.deploy_all == true
         run: |
           make -C df-v2 deploy-all GCP_PROJECT=${{ vars.GCP_PROJECT }} GCP_REGION=${{ vars.GCP_REGION }}
 
       - name: Deploy Dead-Letter Cloud Functions
-        if: steps.filter.outputs.dead_letter == 'true'
+        if: steps.filter.outputs.dead_letter == 'true' || inputs.deploy_all == true
         run: |
           make -C dead_letter_tests deploy-all GCP_PROJECT=${{ vars.GCP_PROJECT }} GCP_REGION=${{ vars.GCP_REGION }}
 
       - name: Build & Deploy gRPC Service to Cloud Run
-        if: steps.filter.outputs.grpc == 'true'
+        if: steps.filter.outputs.grpc == 'true' || inputs.deploy_all == true
         run: |
           make -C grpc_tests deploy-all GCP_PROJECT=${{ vars.GCP_PROJECT }}
