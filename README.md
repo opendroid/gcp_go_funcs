@@ -39,6 +39,16 @@ gcloud services enable \
   logging.googleapis.com
 ```
 
+Create the Docker Artifact Registry repository (one-time setup for `grpc_tests`):
+
+```shell
+gcloud artifacts repositories create notes-grpc-server \
+  --repository-format=docker \
+  --location=us-west2 \
+  --description="Docker repository for Notes gRPC service" \
+  --project="$GCP_PROJECT"
+```
+
 ---
 
 ## 🚀 Local Quality Checks & Makefile Automation
