@@ -26,3 +26,9 @@ data/
 # Ignore vscode settings
 .vscode/
 
+# GCP Service Account keys & secrets
+*sa-key*.json
+*credentials*.json
+*service-account*.json
+sa-key.json
+

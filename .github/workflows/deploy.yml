@@ -1,0 +1,71 @@
+name: CI / CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ── 1. Quality Gate (fmt, vet, lint, test, build) ─────────────
+  quality-check:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Run Workspace Checks
+        run: make check
+
+  # ── 2. CD Deployment (Runs only on push to main) ───────────────
+  deploy:
+    name: Deploy Changed Services
+    needs: quality-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Detect Changed Modules
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            df_v2:
+              - 'df-v2/**'
+            dead_letter:
+              - 'dead_letter_tests/**'
+            grpc:
+              - 'grpc_tests/**'
+
+      - name: Deploy Dialogflow CX & Cloud Run Functions
+        if: steps.filter.outputs.df_v2 == 'true'
+        run: |
+          make -C df-v2 deploy-all GCP_PROJECT=${{ vars.GCP_PROJECT }} GCP_REGION=${{ vars.GCP_REGION }}
+
+      - name: Deploy Dead-Letter Cloud Functions
+        if: steps.filter.outputs.dead_letter == 'true'
+        run: |
+          make -C dead_letter_tests deploy-all GCP_PROJECT=${{ vars.GCP_PROJECT }} GCP_REGION=${{ vars.GCP_REGION }}
+
+      - name: Build & Deploy gRPC Service to Cloud Run
+        if: steps.filter.outputs.grpc == 'true'
+        run: |
+          make -C grpc_tests deploy-all GCP_PROJECT=${{ vars.GCP_PROJECT }}
