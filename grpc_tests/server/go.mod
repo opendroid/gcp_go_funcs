@@ -1,6 +1,6 @@
 module github.com/opendroid/gcp_go_funcs/grpc_tests/server
 
-go 1.22
+go 1.26
 
 require (
 	github.com/opendroid/gcp_go_funcs/grpc_tests/notes v0.0.0-20240728042529-072510173c57

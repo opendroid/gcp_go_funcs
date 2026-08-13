@@ -1,6 +1,6 @@
 module github.com/opendroid/gcp_go_funcs/grpc_tests/notes
 
-go 1.22
+go 1.26
 
 require (
 	google.golang.org/grpc v1.69.2

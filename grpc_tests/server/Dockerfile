@@ -2,7 +2,7 @@
 # Sample https://cloud.google.com/run/docs/quickstarts/build-and-deploy?_ga=2.91290522.-1679093051.1593441137
 
 # Start from the latest golang base image
-FROM golang:1.22 AS builder
+FROM golang:1.26 AS builder
 
 # Add Maintainer Info
 LABEL maintainer="Open Web <plutoapps@outlook.com>"

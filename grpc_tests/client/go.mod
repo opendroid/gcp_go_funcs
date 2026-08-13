@@ -1,6 +1,6 @@
 module github.com/opendroid/gcp_go_funcs/grpc_tests/client
 
-go 1.22
+go 1.26
 
 require (
 	github.com/google/uuid v1.6.0

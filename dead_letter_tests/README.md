@@ -1,38 +1,402 @@
 # Dead Letter Topic
-These functions test the Pub/Sub retries and dead-letter topics.
 
-## Test Cloud Functions
+These functions test Google Cloud Pub/Sub retry behavior and dead-letter topics using **2nd-generation Cloud Functions**, which run on Cloud Run.
 
-First deploy the pub-sub-triggered and HTTP function using --gen2, it uses cloud run to deploy functions.
-The configure the topics and subscriptions. Enable  "Push authentication" with audience URL as your cloud-run URL. Also 
-make sure to provide the "Cloud Run Invoker" and "Cloud Function Invoker" permission to cloud-run service account.
+The test flow is:
 
-In this example, the cloud functions `AckPubMessage` and `BadAckFunc` tests the subscription retries and dead-letter topics.
-Main Pub/Sub topic __radio-pluto__, has  cloud http trigger func `BadAckFunc` is attached to it. This always returns code 500.
-Since __radio-pluto__ topic is set to retry 5 times, the message will be sent 5 times to `BadAckFunc`. 
-Once all retries fails, the message will be pushed to __pluto-dead-letter__ topic.
+```text
+radio-pluto
+    │
+    ▼
+subscription
+    │
+    ▼
+BadAckFunc
+    │
+    │ HTTP 500
+    │ retry up to configured max delivery attempts
+    ▼
+pluto-dead-letter
+    │
+    ▼
+dead-letter-reader
+    │
+    ▼
+AckPubMessage
+    │
+    ▼
+HTTP 200 / ACK
+```
 
-Dead letter topic: __pluto-dead-letter__ has listener `AckPubMessage`. Once the messages is received this function 
-consumes it. Once consumed message is discarded (if configured).
+## Test Functions
+
+Two functions are used:
+
+* `BadAckFunc`
+
+  * HTTP-triggered function.
+  * Always returns HTTP `500`.
+  * Used to force Pub/Sub message redelivery.
+
+* `AckPubMessage`
+
+  * HTTP-triggered function used by the dead-letter subscription.
+  * Successfully consumes the message and returns HTTP `200`.
+
+The main Pub/Sub topic is:
+
+```text
+radio-pluto
+```
+
+Its push subscription invokes `BadAckFunc`.
+
+The subscription is configured with a dead-letter policy and a maximum number of delivery attempts. After the configured delivery attempts fail, Pub/Sub forwards the message to:
+
+```text
+pluto-dead-letter
+```
+
+The dead-letter topic has the push subscription:
+
+```text
+dead-letter-reader
+```
+
+which invokes `AckPubMessage`.
+
+> Pub/Sub calls this setting `max-delivery-attempts`. For example, `5` means approximately five total delivery attempts, not the initial attempt plus five additional retries.
+
+---
+
+## Deploy the Cloud Functions
+
+Activate the correct gcloud configuration:
 
 ```shell
-# Activate  right project configuration
 gcloud config configurations activate gcp-experiments
-# Note that --runtime go122  is supported 
-# https://cloud.google.com/functions/docs/runtime-support#go
-# Ensure that the Cloud functions has permission "Cloud Run Invoker" and "Cloud Function Invoker"
-gcloud functions deploy AckPubMessage  --gen2 --runtime go122 --trigger-topic pluto-dead-letter --project=gcp-experiments-334602
-# Deploy a http func so we can return a error code (to test retry and dead-letter)
-gcloud functions deploy BadAckFunc  --gen2 --runtime go122 --trigger-http --project=gcp-experiments-334602
 ```
 
-### Testing Message Retries
-Pushing messages using command:
+Go 1.26 is supported:
+
+```text
+https://cloud.google.com/functions/docs/runtime-support#go
+```
+
+Deploy `AckPubMessage` as an HTTP function:
+
 ```shell
-# Push a message to a 'radio-pluto' topic
-gcloud pubsub topics publish radio-pluto --message='{"name": "GCP", "rating": "12-star"}' --project=gcp-experiments-334602
+gcloud functions deploy AckPubMessage \
+  --gen2 \
+  --runtime=go126 \
+  --trigger-http \
+  --region=us-central1 \
+  --project=gcp-experiments-334602
 ```
-Then observe the logs for retries. 
 
-## Multiple Subscriptions on a topic.
-This is not tested yet.
+Deploy `BadAckFunc` as an HTTP function so it can explicitly return HTTP `500`:
+
+```shell
+gcloud functions deploy BadAckFunc \
+  --gen2 \
+  --runtime=go126 \
+  --trigger-http \
+  --region=us-central1 \
+  --project=gcp-experiments-334602
+```
+
+Because these are Gen2 Cloud Functions, the functions are backed by Cloud Run services.
+
+For example, `AckPubMessage` may have URLs such as:
+
+```text
+Cloud Functions URL:
+https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage
+
+Cloud Run URLs:
+https://ackpubmessage-2dbml6flea-uc.a.run.app
+https://ackpubmessage-576696822186.us-central1.run.app
+```
+
+For the Pub/Sub push subscription in this test, use the **Cloud Functions URL**.
+
+---
+
+## Configure Push Authentication
+
+The Pub/Sub push subscription authenticates using an OIDC ID token.
+
+The calling service account used in this example is:
+
+```text
+576696822186-compute@developer.gserviceaccount.com
+```
+
+The Pub/Sub service agent is:
+
+```text
+service-576696822186@gcp-sa-pubsub.iam.gserviceaccount.com
+```
+
+### 1. Allow Pub/Sub to generate an OIDC token
+
+Grant `Service Account Token Creator` to the Pub/Sub service agent on the calling service account:
+
+```shell
+gcloud iam service-accounts add-iam-policy-binding \
+  576696822186-compute@developer.gserviceaccount.com \
+  --member="serviceAccount:service-576696822186@gcp-sa-pubsub.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator" \
+  --project=gcp-experiments-334602
+```
+
+### 2. Allow the calling service account to invoke the function
+
+Grant the calling service account `Cloud Run Invoker` on the underlying Gen2 Cloud Run service:
+
+```shell
+gcloud run services add-iam-policy-binding ackpubmessage \
+  --member="serviceAccount:576696822186-compute@developer.gserviceaccount.com" \
+  --role="roles/run.invoker" \
+  --region=us-central1 \
+  --project=gcp-experiments-334602
+```
+
+If required by the Cloud Functions configuration, also verify the corresponding Cloud Functions invocation permissions.
+
+---
+
+## Configure the Dead-Letter Push Subscription
+
+The dead-letter topic is:
+
+```text
+projects/gcp-experiments-334602/topics/pluto-dead-letter
+```
+
+The subscription consuming it is:
+
+```text
+projects/gcp-experiments-334602/subscriptions/dead-letter-reader
+```
+
+### Topic path in the push URL
+
+The Go Functions Framework attempts to determine the Pub/Sub topic from the HTTP request path.
+
+If Pub/Sub invokes only:
+
+```text
+https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage
+```
+
+the function receives the request at `/` and may log:
+
+```text
+WARNING: failed to extract Pub/Sub topic name from the URL request path: "/",
+configure your subscription's push endpoint to use the following path pattern:
+'projects/PROJECT_NAME/topics/TOPIC_NAME'
+```
+
+Therefore the push endpoint should include the Pub/Sub topic path:
+
+```text
+https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage/projects/gcp-experiments-334602/topics/pluto-dead-letter
+```
+
+### Important: configure the OIDC audience separately
+
+The OIDC audience **must remain the base function URL**:
+
+```text
+https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage
+```
+
+Do **not** use the topic-qualified push URL as the OIDC audience.
+
+Otherwise Pub/Sub can generate an ID token whose `aud` claim contains:
+
+```text
+/AckPubMessage/projects/gcp-experiments-334602/topics/pluto-dead-letter
+```
+
+and Cloud Run may reject it with:
+
+```text
+401
+The request was not authorized to invoke this service.
+The access token could not be verified.
+```
+
+Configure the subscription with:
+
+```shell
+gcloud pubsub subscriptions modify-push-config dead-letter-reader \
+  --project=gcp-experiments-334602 \
+  --push-endpoint="https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage/projects/gcp-experiments-334602/topics/pluto-dead-letter" \
+  --push-auth-service-account="576696822186-compute@developer.gserviceaccount.com" \
+  --push-auth-token-audience="https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage"
+```
+
+The distinction is intentional:
+
+```text
+HTTP Push Endpoint
+https://...cloudfunctions.net/AckPubMessage/projects/.../topics/pluto-dead-letter
+                                         │
+                                         └── lets the Functions Framework
+                                             determine the source topic
+
+
+OIDC Audience
+https://...cloudfunctions.net/AckPubMessage
+                                         │
+                                         └── identifies the protected
+                                             function/service
+```
+
+Verify the configuration:
+
+```shell
+gcloud pubsub subscriptions describe dead-letter-reader \
+  --project=gcp-experiments-334602 \
+  --format='yaml(topic,pushConfig,deadLetterPolicy,retryPolicy)'
+```
+
+Expected push configuration:
+
+```yaml
+pushConfig:
+  oidcToken:
+    audience: https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage
+    serviceAccountEmail: 576696822186-compute@developer.gserviceaccount.com
+  pushEndpoint: https://us-central1-gcp-experiments-334602.cloudfunctions.net/AckPubMessage/projects/gcp-experiments-334602/topics/pluto-dead-letter
+topic: projects/gcp-experiments-334602/topics/pluto-dead-letter
+```
+
+---
+
+## Configure Retries and Dead-Letter Policy
+
+The dead-letter configuration belongs to the **subscription consuming `radio-pluto`**, not to the topic itself.
+
+Conceptually:
+
+```text
+radio-pluto
+    │
+    ▼
+source subscription
+    │
+    ├── delivery attempt 1 → BadAckFunc → 500
+    ├── delivery attempt 2 → BadAckFunc → 500
+    ├── delivery attempt 3 → BadAckFunc → 500
+    ├── delivery attempt 4 → BadAckFunc → 500
+    └── delivery attempt 5 → BadAckFunc → 500
+                                      │
+                                      ▼
+                             pluto-dead-letter
+```
+
+Configure the source subscription with a dead-letter topic and maximum delivery attempts, for example:
+
+```shell
+gcloud pubsub subscriptions update SOURCE_SUBSCRIPTION \
+  --project=gcp-experiments-334602 \
+  --dead-letter-topic=pluto-dead-letter \
+  --max-delivery-attempts=5
+```
+
+A retry policy can also be configured if delayed/exponential redelivery is desired.
+
+---
+
+## Testing the Dead-Letter Reader
+
+Before testing the entire retry chain, verify that the dead-letter topic can successfully invoke `AckPubMessage`.
+
+Publish directly to the dead-letter topic:
+
+```shell
+gcloud pubsub topics publish pluto-dead-letter \
+  --project=gcp-experiments-334602 \
+  --message='{"test":"dead-letter-reader"}'
+```
+
+Inspect the `AckPubMessage` Cloud Run logs:
+
+```shell
+gcloud logging read \
+  'resource.type="cloud_run_revision"
+   AND resource.labels.service_name="ackpubmessage"' \
+  --project=gcp-experiments-334602 \
+  --limit=20 \
+  --freshness=5m \
+  --format='table(timestamp,httpRequest.status,textPayload)'
+```
+
+Successful delivery should show:
+
+```text
+STATUS
+200
+```
+
+HTTP `200` means Pub/Sub considers the pushed message acknowledged.
+
+You can also verify that the earlier topic-path warning has disappeared:
+
+```shell
+gcloud logging read \
+  'resource.type="cloud_run_revision"
+   AND resource.labels.service_name="ackpubmessage"
+   AND textPayload:"failed to extract Pub/Sub topic name"' \
+  --project=gcp-experiments-334602 \
+  --freshness=5m \
+  --limit=20
+```
+
+For newly delivered messages, this should return no matching warning.
+
+---
+
+## Testing Message Retries
+
+Publish a message to the main topic:
+
+```shell
+gcloud pubsub topics publish radio-pluto \
+  --project=gcp-experiments-334602 \
+  --message='{"name":"GCP","rating":"12-star"}'
+```
+
+The expected sequence is:
+
+```text
+1. Message published to radio-pluto
+2. Pub/Sub pushes message to BadAckFunc
+3. BadAckFunc returns HTTP 500
+4. Pub/Sub redelivers according to the subscription retry policy
+5. After approximately max-delivery-attempts failures,
+   Pub/Sub forwards the message to pluto-dead-letter
+6. dead-letter-reader pushes the message to AckPubMessage
+7. AckPubMessage returns HTTP 200
+8. Pub/Sub acknowledges the dead-letter message
+```
+
+Observe the logs for `BadAckFunc` to confirm repeated HTTP `500` responses and the logs for `AckPubMessage` to confirm eventual HTTP `200`.
+
+---
+
+## Multiple Subscriptions on a Topic
+
+Not tested yet.
+
+Each Pub/Sub subscription has independent:
+
+* retry behavior
+* delivery-attempt tracking
+* push configuration
+* dead-letter policy
+
+Therefore multiple subscriptions on the same topic can use different retry counts and different dead-letter topics.

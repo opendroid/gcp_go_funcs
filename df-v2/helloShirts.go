@@ -1,56 +1,68 @@
 package df_v2
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
-	"cloud.google.com/go/logging"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 )
 
 func init() {
 	functions.HTTP("HelloShirts", helloShirts)
 	functions.HTTP("Echo", echo)
-	functions.HTTP("ManojS", manojS)
+	functions.HTTP("LogTestV2", logTestV2)
 }
 
-// helloShirts is an HTTP Cloud Function.
 func helloShirts(w http.ResponseWriter, r *http.Request) {
-	defer func() { _ = r.Body.Close() }()
+	defer r.Body.Close()
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		_, _ = fmt.Fprintf(w, "Error reading request body: %v", err)
+		http.Error(w, "failed to read request body", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf(`{"method": "helloShirts", "message": "Hello, %s!"}`, body)
-	_, _ = fmt.Fprintf(w, "echo: %s", body)
+
+	logger.Info(
+		"helloShirts request",
+		"body", string(body),
+	)
+
+	_, _ = w.Write([]byte("echo: " + string(body)))
 }
 
-// echo is an HTTP Cloud Function.
 func echo(w http.ResponseWriter, r *http.Request) {
-	defer func() { _ = r.Body.Close() }()
-	defer logger.Flush() // Ensure the entry is written.
+	defer r.Body.Close()
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		_, _ = fmt.Fprintf(w, "Error reading request body: %v", err)
+		http.Error(w, "failed to read request body", http.StatusBadRequest)
 		return
 	}
-	logger.Log(logging.Entry{Payload: json.RawMessage(string(body)),
-		Labels: map[string]string{"method": "echo", "bot": "echo"},
-	})
-	_, _ = fmt.Fprintf(w, "%s", body)
+
+	logger.Info(
+		"echo request",
+		"method", "echo",
+		"bot", "echo",
+		"body", string(body),
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(body)
 }
 
-// manojS is an HTTP Cloud Function.
-func manojS(w http.ResponseWriter, r *http.Request) {
-	defer func() { _ = r.Body.Close() }()
+func logTestV2(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		_, _ = fmt.Fprintf(w, "Error reading request body: %v", err)
+		http.Error(w, "failed to read request body", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf(`{message: "manojS", "body": %s}`, body)
-	_, _ = fmt.Fprintf(w, "%s", body)
+
+	logger.Info(
+		"logTestV2 request",
+		"body", string(body),
+	)
+
+	_, _ = w.Write(body)
 }
