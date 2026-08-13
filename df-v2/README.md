@@ -5,8 +5,8 @@ Deploying Go functions for Dialogflow using **Cloud Run functions**.
 Cloud Functions 2nd gen is now part of the Cloud Run functions model. Functions are deployed and managed as Cloud Run services using `gcloud run deploy`.
 
 ```shell
-GCP_PROJECT=gcp-experiments-334602
-GCP_REGION=us-central1
+GCP_PROJECT={YOUR PROJECT ID}
+GCP_REGION={YOUR REGION}
 ```
 
 ## Basic HTTP Function
