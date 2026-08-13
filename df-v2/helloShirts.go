@@ -23,7 +23,9 @@ func helloShirts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Info(
-		"helloShirts request",
+		"request",
+		"method", "helloShirts",
+		"bot", "helloShirts",
 		"body", string(body),
 	)
 
@@ -40,7 +42,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Info(
-		"echo request",
+		"request",
 		"method", "echo",
 		"bot", "echo",
 		"body", string(body),
@@ -60,7 +62,9 @@ func logTestV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Info(
-		"logTestV2 request",
+		"request",
+		"method", "logTestV2",
+		"bot", "logTestV2",
 		"body", string(body),
 	)
 

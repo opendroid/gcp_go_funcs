@@ -39,44 +39,90 @@ type PubSubMessage struct {
 }
 
 // ackPubMessage test a message
-func ackPubMessage(_ context.Context, e event.Event) error {
+func ackPubMessage(ctx context.Context, e event.Event) error {
 	var msg MessagePublishedData
 	if err := e.DataAs(&msg); err != nil {
+		logger.ErrorContext(
+			ctx,
+			"failed to decode event data",
+			"method", "AckPubMessage",
+			"error", err,
+		)
 		return fmt.Errorf("event.DataAs: %w", err)
 	}
+
 	data := string(msg.Message.Data) // Automatically decoded from base64.
-	fmt.Println()                    // Fix error in printing
-	// WARNING: failed to extract Pub/Sub topic name from the URL request path: "/",
-	// configure your subscription's push endpoint to use the following path pattern: 'projects/PROJECT_NAME/topics/TOPIC_NAME'
-	if string(data) != "" {
-		m := fmt.Sprintf(`{"severity": "INFO", "method": "AckPubMessage",  "subscription": "%s", "data": %s}`, msg.Subscription, data)
-		fmt.Println(m)
+
+	if data != "" {
+		logger.InfoContext(
+			ctx,
+			"AckPubMessage received message",
+			"method", "AckPubMessage",
+			"subscription", msg.Subscription,
+			"data", data,
+			"message_id", msg.Message.ID,
+		)
 	} else {
-		m := fmt.Sprintf(`{"severity"": "INFO", "method": "AckPubMessage", "subscription": "%s", "data": "no-data"}`, msg.Subscription)
-		fmt.Println(m)
+		logger.InfoContext(
+			ctx,
+			"AckPubMessage received message with no data",
+			"method", "AckPubMessage",
+			"subscription", msg.Subscription,
+			"message_id", msg.Message.ID,
+		)
 	}
 	return nil
 }
 
 // badAckFunc a cloud func that returns 'internal server' error
 func badAckFunc(w http.ResponseWriter, r *http.Request) {
+	defer func() { _ = r.Body.Close() }()
+
 	var msg MessagePublishedData
 	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-		m := fmt.Sprintf(`{"severity": "ERROR", "message": "Request not formatted", "method": "BadAckFunc", "error": "%s"}`, err.Error())
-		fmt.Println(m)
+		logger.ErrorContext(
+			r.Context(),
+			"request not formatted",
+			"method", "BadAckFunc",
+			"error", err.Error(),
+		)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	_ = r.Body.Close()
-	if data := string(msg.Message.Data); data != "" {
-		deliveryAttempt := msg.Message.Attributes["googclient_deliveryattempt"]
-		if deliveryAttempt != "" { // Note that this is not set yet.
-			data += fmt.Sprintf(`, "attempt": %s`, deliveryAttempt)
+
+	data := string(msg.Message.Data)
+	deliveryAttempt := msg.Message.Attributes["googclient_deliveryattempt"]
+
+	if data != "" {
+		if deliveryAttempt != "" {
+			logger.InfoContext(
+				r.Context(),
+				"BadAckFunc received message",
+				"method", "BadAckFunc",
+				"subscription", msg.Subscription,
+				"data", data,
+				"attempt", deliveryAttempt,
+				"message_id", msg.Message.ID,
+			)
+		} else {
+			logger.InfoContext(
+				r.Context(),
+				"BadAckFunc received message",
+				"method", "BadAckFunc",
+				"subscription", msg.Subscription,
+				"data", data,
+				"message_id", msg.Message.ID,
+			)
 		}
-		m := fmt.Sprintf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s", "data": %s}`, msg.Subscription, data)
-		fmt.Println(m)
 	} else {
-		m := fmt.Sprintf(`{"severity": "INFO", "method": "BadAckFunc", "subscription": "%s"}`, msg.Subscription)
-		fmt.Println(m)
+		logger.InfoContext(
+			r.Context(),
+			"BadAckFunc received message with no data",
+			"method", "BadAckFunc",
+			"subscription", msg.Subscription,
+			"message_id", msg.Message.ID,
+		)
 	}
+
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
 }

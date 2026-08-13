@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -32,16 +31,15 @@ func main() {
 	if addr := os.Getenv("NOTES_GRPC_ADDRESS"); addr != "" {
 		hostPort = addr
 	}
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "client-main", "text": "trying host", "host": "%s"}`, hostPort)
-	fmt.Println(m)
+	logger.Debug("attempting connection to host", "method", "client-main", "host", hostPort)
+
 	// Note: gRPC client app must handle TLS, per https://ahmet.im/blog/grpc-auth-cloud-run/
-	// Check if  run.app supplied TLS certificate is trusted
+	// Check if run.app supplied TLS certificate is trusted
 	if strings.Contains(hostPort, GCPCloudRunEndpoint) {
 		opts = append(opts, grpc.WithAuthority(hostPort))
 		systemRoots, err := x509.SystemCertPool()
 		if err != nil {
-			m := fmt.Sprintf(`{"severity": "ERROR", "method": "client-main", "error": %q, "text": "Failed to load system root CA cert pool"}`, err.Error())
-			fmt.Println(m)
+			logger.Error("failed to load system root CA cert pool", "method", "client-main", "error", err)
 			return
 		}
 		cred := credentials.NewTLS(&tls.Config{RootCAs: systemRoots})
@@ -49,18 +47,17 @@ func main() {
 	} else {
 		// Insecure for localhost:8080 testing.
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		fmt.Println(`{"severity": "INFO", "method": "client-main", "message": "Proceeding without TLS"}`)
+		logger.Info("proceeding without TLS", "method", "client-main")
 	}
-	// opts = append(opts, grpc.WithInsecure())
+
 	conn, err := grpc.NewClient(hostPort, opts...)
 	if err != nil {
-		m := fmt.Sprintf(`{"severity": "ERROR", "method": "client-main", "error": %q, "text": "Failed to dial"}`, err.Error())
-		fmt.Println(m)
+		logger.Error("failed to dial gRPC host", "method", "client-main", "error", err, "host", hostPort)
 		return
 	}
 	defer func() { _ = conn.Close() }()
 	c := notespb.NewNotesServiceClient(conn) // Create a client
-	createNote(c)                            // Call CreatesNot API on 'c'
+	createNote(c)                            // Call CreateNote API on 'c'
 	getNotesByAuthor(c, AuthorID)
 }
 
@@ -71,12 +68,10 @@ func createNote(c notespb.NotesServiceClient) {
 	ans, err := c.CreateNote(ctx, createNoteRequest())
 
 	if err != nil {
-		m := fmt.Sprintf(`{"severity": "DEBUG", "ERROR": "createNote", "response": %q}`, err.Error())
-		fmt.Println(m)
+		logger.ErrorContext(ctx, "failed to create note", "method", "createNote", "error", err)
 		return
 	}
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "createNote", "text": "%s"}`, ans.GetErrMessage())
-	fmt.Println(m)
+	logger.InfoContext(ctx, "createNote response", "method", "createNote", "response", ans.GetErrMessage())
 }
 
 // getNotesByAuthor fetches all notes by an author
@@ -85,28 +80,26 @@ func getNotesByAuthor(c notespb.NotesServiceClient, author string) {
 	defer cancel()
 	ans, err := c.GetNotesByAuthor(ctx, &notespb.GetNotesByAuthorRequest{Author: AuthorID})
 	if err != nil {
-		m := fmt.Sprintf(`{"severity": "ERROR", "method": "getNotesByAuthor", "message": %q}`, err.Error())
-		fmt.Println(m)
+		logger.ErrorContext(ctx, "failed to get notes by author", "method", "getNotesByAuthor", "error", err, "author", author)
 		return
 	}
 	// print all notes fetched
 	notes := ans.GetNotes()
 	if len(notes) == 0 {
-		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "getNotesByAuthor", "message": "no notes by author", "author": "%s"}`, author)
-		fmt.Println(m)
+		logger.InfoContext(ctx, "no notes found by author", "method", "getNotesByAuthor", "author", author)
 		return
 	}
 	for i, n := range notes {
-		locations := "["
-		if loc := n.GetLocations(); len(loc) > 0 {
-			for _, l := range loc {
-				locations += fmt.Sprintf(`{"lat": %f, "long": %f, "at": "%s"}`, l.Latitude, l.Longitude, l.At.AsTime())
-			}
-		}
-		locations += "]"
-		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "getNotesByAuthor", "note": %d, "id": "%s", "text": "%s", "at": "%s", "locations": %s}`,
-			i+1, n.GetId(), n.GetText(), n.CreatedAt.AsTime(), locations)
-		fmt.Println(m)
+		logger.InfoContext(
+			ctx,
+			"retrieved note",
+			"method", "getNotesByAuthor",
+			"index", i+1,
+			"id", n.GetId(),
+			"text", n.GetText(),
+			"created_at", n.CreatedAt.AsTime().String(),
+			"location_count", len(n.GetLocations()),
+		)
 	}
 }
 

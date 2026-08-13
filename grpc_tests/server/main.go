@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	pb "github.com/opendroid/gcp_go_funcs/grpc_tests/notes"
 	"google.golang.org/grpc"
 	"net"
@@ -16,23 +15,20 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
-		m := fmt.Sprintf(`{"severity": "WARNING", "method": "server-main", "port": "%s", "message": "default port"}`, port)
-		fmt.Println(m)
+		logger.Warn("PORT environment variable not set, using default port", "method", "server-main", "port", port)
 	}
 
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		m := fmt.Sprintf(`{"severity": "ERROR", "method": "server-main", "error": "%s", "message": "message on faileing to listen"}`, err.Error())
-		fmt.Println(m)
+		logger.Error("failed to listen on port", "method", "server-main", "error", err, "port", port)
 		return
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterNotesServiceServer(s, &notesServer{})
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "server-main", "message": "gRPC listening at %v"}`, l.Addr())
-	fmt.Println(m)
+	logger.Info("gRPC server listening", "method", "server-main", "address", l.Addr().String())
 
-	// Trap SIGTERM,  test  by: docker kill --signal="SIGTERM"
+	// Trap SIGTERM, test by: docker kill --signal="SIGTERM"
 	// https://cloud.google.com/run/docs/samples/cloudrun-sigterm-handler
 	var wg sync.WaitGroup
 	var sig os.Signal
@@ -47,10 +43,8 @@ func main() {
 
 	// Start the server
 	if err := s.Serve(l); err != nil {
-		m := fmt.Sprintf(`{"severity": "ERROR", "method": "server-main", "error": "%s", "message": "exiting on failure to serve"}`, err.Error())
-		fmt.Println(m)
+		logger.Error("server exited on failure to serve", "method", "server-main", "error", err)
 	}
 	wg.Wait()
-	m = fmt.Sprintf(`{"severity": "INFO", "method": "server-main", "message": "%v signal received exiting"}`, sig)
-	fmt.Println(m)
+	logger.Info("shutdown signal received, exiting", "method", "server-main", "signal", sig.String())
 }

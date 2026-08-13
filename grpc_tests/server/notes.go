@@ -41,21 +41,32 @@ const (
 )
 
 // CreateNote add a note to the local map
-func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteRequest) (*notespb.CreateNoteResponse, error) {
+func (s *notesServer) CreateNote(ctx context.Context, request *notespb.CreateNoteRequest) (*notespb.CreateNoteResponse, error) {
 	locations := request.Note.GetLocations()
 	if len(locations) > 0 {
 		for _, loc := range locations {
 			lat := loc.Latitude
 			long := loc.Longitude
 			at := loc.At.AsTime()
-			m := fmt.Sprintf(`{"severity": "DEBUG", "method": "CreateNote", "noteID": "%s", "message": "created note with location", "author": "%s", "lat": %f, "long": %f, "at": "%s"}`,
-				request.GetNote().GetId(), request.GetAuthor(), lat, long, at.String())
-			fmt.Println(m)
+			logger.DebugContext(
+				ctx,
+				"created note with location",
+				"method", "CreateNote",
+				"note_id", request.GetNote().GetId(),
+				"author", request.GetAuthor(),
+				"lat", lat,
+				"long", long,
+				"at", at.String(),
+			)
 		}
 	} else {
-		m := fmt.Sprintf(`{"severity": "DEBUG", "method": "CreateNote", "noteID": "%s", "author": "%s", "message": "created note without location"}`,
-			request.GetNote().GetId(), request.GetAuthor())
-		fmt.Println(m)
+		logger.DebugContext(
+			ctx,
+			"created note without location",
+			"method", "CreateNote",
+			"note_id", request.GetNote().GetId(),
+			"author", request.GetAuthor(),
+		)
 	}
 
 	// Get notes fields, copy from protobuf to local map
@@ -88,9 +99,8 @@ func (s *notesServer) CreateNote(_ context.Context, request *notespb.CreateNoteR
 }
 
 // GetNote that is a specific UUID and by Author
-func (s *notesServer) GetNote(_ context.Context, _ *notespb.GetNoteRequest) (*notespb.GetNoteResponse, error) {
-	m := `{"severity": "DEBUG", "method": "GetNote", "message": "implement me"}`
-	fmt.Println(m)
+func (s *notesServer) GetNote(ctx context.Context, _ *notespb.GetNoteRequest) (*notespb.GetNoteResponse, error) {
+	logger.DebugContext(ctx, "GetNote stub called", "method", "GetNote")
 	now := timestamppb.Now()
 	return &notespb.GetNoteResponse{Note: &notespb.Note{
 		Id:          InvalidID,
@@ -103,10 +113,10 @@ func (s *notesServer) GetNote(_ context.Context, _ *notespb.GetNoteRequest) (*no
 }
 
 // GetNotesByAuthor all notes by the Author
-func (s *notesServer) GetNotesByAuthor(_ context.Context, request *notespb.GetNotesByAuthorRequest) (*notespb.GetNotesByAuthorResponse, error) {
+func (s *notesServer) GetNotesByAuthor(ctx context.Context, request *notespb.GetNotesByAuthorRequest) (*notespb.GetNotesByAuthorResponse, error) {
 	author := request.GetAuthor()
 	if author == "" {
-		fmt.Println(`{"severity": "WARNING", "method": "GetNotesByAuthor", "message": "need author UUID"}`)
+		logger.WarnContext(ctx, "missing author UUID", "method", "GetNotesByAuthor")
 		return nil, fmt.Errorf("GetNotesByAuthor: need author UUID")
 	}
 
@@ -130,12 +140,21 @@ func (s *notesServer) GetNotesByAuthor(_ context.Context, request *notespb.GetNo
 					} // Add each location
 				}
 			}
-			m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNotesByAuthor", "message": "%d notes by the author", "author": "%s"}`, len(nd), author)
-			fmt.Println(m)
+			logger.DebugContext(
+				ctx,
+				"retrieved notes by author",
+				"method", "GetNotesByAuthor",
+				"count", len(nd),
+				"author", author,
+			)
 			return &notespb.GetNotesByAuthorResponse{Notes: nptrs}, nil
 		}
 	}
-	m := fmt.Sprintf(`{"severity": "DEBUG", "method": "GetNotesByAuthor", "message": "no notes by the author", "author": "%s"}`, author)
-	fmt.Println(m)
+	logger.DebugContext(
+		ctx,
+		"no notes found for author",
+		"method", "GetNotesByAuthor",
+		"author", author,
+	)
 	return nil, fmt.Errorf("GetNotesByAuthor: no notes by author %s", author)
 }
