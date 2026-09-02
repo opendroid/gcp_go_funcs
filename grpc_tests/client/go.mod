@@ -5,7 +5,7 @@ go 1.26
 require (
 	github.com/google/uuid v1.6.0
 	github.com/opendroid/gcp_go_funcs/grpc_tests/notes v0.0.0-20260813205201-901c5b7032c4
-	google.golang.org/grpc v1.83.0
+	google.golang.org/grpc v1.83.1
 	google.golang.org/protobuf v1.36.12
 )
 
