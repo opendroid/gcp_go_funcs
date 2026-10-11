@@ -1,0 +1,9 @@
+go 1.26
+
+use (
+	./dead_letter_tests
+	./df-v2
+	./grpc_tests/client
+	./grpc_tests/notes
+	./grpc_tests/server
+)
