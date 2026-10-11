@@ -77,7 +77,7 @@ Activate the correct gcloud configuration:
 gcloud config configurations activate gcp-experiments
 ```
 
-Go 1.26 is supported:
+Go 1.27 is supported:
 
 ```text
 https://cloud.google.com/functions/docs/runtime-support#go
@@ -88,7 +88,7 @@ Deploy AckPubMessage as a Pub/Sub-triggered CloudEvent function. The function is
 ```shell
 gcloud functions deploy AckPubMessage \
   --gen2 \
-  --runtime=go126 \
+  --runtime=go127 \
   --region=us-central1 \
   --project=$YOUR_PROJECT_ID
 ```
@@ -98,7 +98,7 @@ Deploy `BadAckFunc` as an HTTP function so it can explicitly return HTTP `500`:
 ```shell
 gcloud functions deploy BadAckFunc \
   --gen2 \
-  --runtime=go126 \
+  --runtime=go127 \
   --region=us-central1 \
   --trigger-http \
   --project=$YOUR_PROJECT_ID

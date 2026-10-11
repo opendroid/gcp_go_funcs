@@ -17,7 +17,7 @@ Deploy `HelloShirts` as a Cloud Run function:
 gcloud run deploy hello-shirts \
   --source=. \
   --function=HelloShirts \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --no-allow-unauthenticated
@@ -26,7 +26,7 @@ gcloud run deploy hello-shirts \
 For Cloud Run functions:
 
 * `--function` specifies the Go function entry point.
-* `--base-image=go126` selects the Go 1.26 runtime.
+* `--base-image=go127` selects the Go 1.27 runtime.
 * `--source=.` builds and deploys the function directly from the current source directory.
 * `--no-allow-unauthenticated` keeps the service private.
 
@@ -77,7 +77,7 @@ Deploy `HandleWebhookRequest` as the `cx-webhook` Cloud Run service:
 gcloud run deploy cx-webhook \
   --source=. \
   --function=HandleWebhookRequest \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --no-allow-unauthenticated
@@ -128,7 +128,7 @@ Deploy `Echo` as `echo`:
 gcloud run deploy echo \
   --source=. \
   --function=Echo \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --no-allow-unauthenticated
@@ -140,7 +140,7 @@ Deploy the same entry point as another service:
 gcloud run deploy echo-v2 \
   --source=. \
   --function=Echo \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --no-allow-unauthenticated
@@ -165,7 +165,7 @@ Deploy `HelloShirts` as the public `go-all` service:
 gcloud run deploy go-all \
   --source=. \
   --function=HelloShirts \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --allow-unauthenticated
@@ -217,7 +217,7 @@ Deploy `HelloShirts` as the private `go-auth` service:
 gcloud run deploy go-auth \
   --source=. \
   --function=HelloShirts \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --no-allow-unauthenticated
@@ -256,7 +256,7 @@ Deploy the Dialogflow CX webhook:
 gcloud run deploy cx-webhook \
   --source=. \
   --function=HandleWebhookRequest \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="$GCP_REGION" \
   --no-allow-unauthenticated
@@ -295,7 +295,7 @@ curl -m 70 \
 | --------------------------- | ------------------------------------------- |
 | `gcloud functions deploy`   | `gcloud run deploy`                         |
 | `--gen2`                    | Not required                                |
-| `--runtime=go126`           | `--base-image=go126`                        |
+| `--runtime=go127`           | `--base-image=go127`                        |
 | `--entry-point=HelloShirts` | `--function=HelloShirts`                    |
 | `--trigger-http`            | Not required for an HTTP Cloud Run function |
 | `--source=.`                | `--source=.`                                |
@@ -309,7 +309,7 @@ Google describes a Cloud Run function as a Cloud Run service deployed from sourc
 
 * Prefer `gcloud run deploy` for new Cloud Run functions.
 * Use `--function=<GO_ENTRY_POINT>` for Functions Framework-style Go functions.
-* Use `--base-image=go126` for Go 1.26.
+* Use `--base-image=go127` for Go 1.27.
 * Use `--allow-unauthenticated` only when the endpoint should be public.
 * Use `--no-allow-unauthenticated` for private endpoints.
 * For private endpoints, callers require Cloud Run invocation permission and must provide a valid ID token.

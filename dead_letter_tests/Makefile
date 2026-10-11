@@ -2,7 +2,7 @@
 
 GCP_PROJECT       ?= gcp-experiments-334602
 GCP_REGION        ?= us-central1
-RUNTIME           ?= go126
+RUNTIME           ?= go127
 TOPIC_MAIN        ?= radio-pluto
 TOPIC_DEAD_LETTER ?= pluto-dead-letter
 SUB_DEAD_LETTER   ?= dead-letter-reader

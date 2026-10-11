@@ -1,6 +1,6 @@
 module github.com/opendroid/gcp_go_funcs/dead_letter_tests
 
-go 1.26
+go 1.27
 
 require (
 	github.com/GoogleCloudPlatform/functions-framework-go v1.9.2

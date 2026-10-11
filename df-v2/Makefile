@@ -2,7 +2,7 @@
 
 GCP_PROJECT ?= gcp-experiments-334602
 GCP_REGION  ?= us-central1
-RUNTIME     ?= go126
+RUNTIME     ?= go127
 
 .PHONY: help fmt vet lint test build check update tidy deploy-cx-webhook deploy-hello-shirts deploy-echo deploy-log-test deploy-all describe-cx describe-hello test-cx
 

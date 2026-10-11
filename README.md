@@ -1,6 +1,6 @@
 # gcp_go_funcs
 
-[![Go Version](https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.27-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![GCP Cloud Run](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-4285F4?style=flat&logo=google-cloud)](https://cloud.google.com/run)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -14,7 +14,7 @@ The repository is organized as a Go multi-module workspace (`go.work`):
 
 | Directory | Description | Technologies |
 | :--- | :--- | :--- |
-| [`df-v2/`](df-v2/) | Dialogflow CX fulfillment webhook and HTTP Cloud Run functions (`HelloShirts`, `Echo`, `LogTestV2`) using `log/slog` structured JSON logging. | Cloud Run functions, `log/slog`, Go 1.26 |
+| [`df-v2/`](df-v2/) | Dialogflow CX fulfillment webhook and HTTP Cloud Run functions (`HelloShirts`, `Echo`, `LogTestV2`) using `log/slog` structured JSON logging. | Cloud Run functions, `log/slog`, Go 1.27 |
 | [`dead_letter_tests/`](dead_letter_tests/) | Pub/Sub retry mechanisms, dead-letter topics (`pluto-dead-letter`), and OIDC push authentication configurations for Cloud Run functions. | Pub/Sub, CloudEvent, Cloud Run, IAM |
 | [`grpc_tests/`](grpc_tests/) | Complete gRPC service (`NotesService`) showcasing protobuf definitions, client, and Dockerized server deployed to Cloud Run with HTTP/2. | gRPC, Protobuf, Docker, Cloud Run HTTP/2 |
 
@@ -22,7 +22,7 @@ The repository is organized as a Go multi-module workspace (`go.work`):
 
 ## 🛠️ Prerequisites
 
-- **Go**: Version `1.26` or higher
+- **Go**: Version `1.27` or higher
 - **Google Cloud SDK (`gcloud`)**: Authenticated and configured with your project
 - **Docker**: For local testing and container image builds (for `grpc_tests`)
 - **Protocol Buffers (`protoc`)**: For compiling `.proto` files (for `grpc_tests`)
@@ -105,7 +105,7 @@ Implements Dialogflow CX webhook handling (`HandleWebhookRequest`) and HTTP util
 gcloud run deploy cx-webhook \
   --source=df-v2 \
   --function=HandleWebhookRequest \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="us-central1" \
   --no-allow-unauthenticated
@@ -114,7 +114,7 @@ gcloud run deploy cx-webhook \
 gcloud run deploy echo \
   --source=df-v2 \
   --function=Echo \
-  --base-image=go126 \
+  --base-image=go127 \
   --project="$GCP_PROJECT" \
   --region="us-central1" \
   --no-allow-unauthenticated

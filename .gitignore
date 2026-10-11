@@ -21,8 +21,7 @@ bin/
 .DS_Store
 # Protobug generates
 *.pb
-# Ignore work files
-go.work
+
 
 data/
 
